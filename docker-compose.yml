@@ -1,0 +1,18 @@
+services:
+  app:
+    build: .
+    image: todov2_standalone
+    restart: always
+    ports:
+      - "8080:8080"
+    env_file:
+      - .env
+    volumes:
+      - ./src:/app/src  # Hot reloading for code
+      - ./tests:/app/tests # Tests
+      - ./pyproject.toml:/app/pyproject.toml # Config
+      - ./todo.db:/app/todo.db # Persist SQLite db
+    environment:
+      - PYTHONUNBUFFERED=1
+      - DATABASE_URL=sqlite:///todo.db
+

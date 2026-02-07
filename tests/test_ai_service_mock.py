@@ -1,0 +1,70 @@
+import uuid
+from unittest.mock import MagicMock, patch
+import pytest
+from src.services import ai_service, todo_service, person_service
+from src.models import TodoCreate, PersonCreate
+from sqlmodel import Session
+from fastapi import HTTPException
+
+
+# Mock response object
+class MockGeminiResponse:
+    def __init__(self, text):
+        self.text = text
+
+
+def test_generate_subtasks_success(session: Session):
+    # Setup data
+    p = person_service.create_person(session, PersonCreate(name="AI User"))
+    todo = todo_service.create_todo(
+        session, TodoCreate(title="Plan Party", description="Big party", person_id=p.id)
+    )
+
+    # Mock settings to return API Key
+    with patch("src.services.ai_service.get_settings") as mock_settings:
+        mock_settings.return_value.GEMINI_API_KEY = "TEST_KEY"
+
+        # Mock google.genai.Client
+        with patch("google.genai.Client") as mock_client_cls:
+            mock_client_instance = MagicMock()
+            mock_client_cls.return_value = mock_client_instance
+
+            # Setup response
+            expected_subtasks = ["Buy chips", "Invite friends", "Clean house"]
+            mock_client_instance.models.generate_content.return_value = (
+                MockGeminiResponse(
+                    text=f"```json\n{str(expected_subtasks).replace("'", '"')}\n```"
+                )
+            )
+
+            # Call service
+            updated_todo = ai_service.generate_subtasks(session, todo.id)
+
+            # Verify
+            assert len(updated_todo.subtasks) == 3
+            titles = sorted([st.title for st in updated_todo.subtasks])
+            assert titles == sorted(expected_subtasks)
+
+
+def test_generate_subtasks_no_api_key(session: Session):
+    # Setup data
+    p = person_service.create_person(session, PersonCreate(name="NoKey User"))
+    todo = todo_service.create_todo(
+        session, TodoCreate(title="Task", description="Desc", person_id=p.id)
+    )
+
+    with patch("src.services.ai_service.get_settings") as mock_settings:
+        mock_settings.return_value.GEMINI_API_KEY = None
+
+        with pytest.raises(HTTPException) as excinfo:
+            ai_service.generate_subtasks(session, todo.id)
+        assert excinfo.value.status_code == 500
+
+
+def test_generate_subtasks_todo_not_found(session: Session):
+    with patch("src.services.ai_service.get_settings") as mock_settings:
+        mock_settings.return_value.GEMINI_API_KEY = "TEST_KEY"
+
+        with pytest.raises(HTTPException) as excinfo:
+            ai_service.generate_subtasks(session, uuid.uuid4())
+        assert excinfo.value.status_code == 404
