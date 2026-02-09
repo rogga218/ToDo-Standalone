@@ -3,7 +3,7 @@ from typing import List, Dict, Any
 from nicegui import run
 from sqlmodel import Session
 from src.database import engine
-from src.models import PersonCreate, TodoCreate, TodoUpdate
+from src.models import PersonCreate, TodoCreate, TodoUpdate, Person, TodoRead
 from src.services import person_service, todo_service, ai_service
 
 
@@ -17,22 +17,19 @@ async def run_db(func, *args, **kwargs):
 
 
 class ApiClient:
-    async def get_todos(self) -> List[Dict[str, Any]]:
+    async def get_todos(self) -> List[TodoRead]:
         try:
-            # We fetch list of Todo objects. We need to convert to dicts for UI if UI expects dicts.
-            # Services return SQLModel objects. model_dump() converts to dict.
+            # We fetch list of Todo objects.
             todos = await run_db(todo_service.get_todos)
-            from src.models import TodoRead
-
-            return [TodoRead.model_validate(t).model_dump() for t in todos]
+            return [TodoRead.model_validate(t) for t in todos]
         except Exception as e:
             print(f"Error fetching todos: {e}")
             return []
 
-    async def get_persons(self) -> List[Dict[str, Any]]:
+    async def get_persons(self) -> List[Person]:
         try:
             persons = await run_db(person_service.get_persons)
-            return [p.model_dump() for p in persons]
+            return persons
         except Exception as e:
             print(f"Error fetching persons: {e}")
             return []
@@ -44,6 +41,14 @@ class ApiClient:
             return {"success": True, "data": res.model_dump()}
         except Exception as e:
             # Service raises HTTPException, we can catch it or generic exception
+            return {"success": False, "error": str(e)}
+
+    async def delete_person(self, person_id: str) -> Dict[str, Any]:
+        try:
+            pid = uuid.UUID(str(person_id))
+            await run_db(person_service.delete_person, pid)
+            return {"success": True}
+        except Exception as e:
             return {"success": False, "error": str(e)}
 
     async def create_todo(self, todo: Dict[str, Any]) -> Dict[str, Any]:

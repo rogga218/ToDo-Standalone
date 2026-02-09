@@ -23,15 +23,20 @@ def create_person(session: Session, person: PersonCreate) -> Person:
 
 def get_persons(session: Session) -> List[Person]:
     """Retrieves all persons."""
-    return session.exec(select(Person).order_by(Person.name)).all()
+    return list(session.exec(select(Person).order_by(Person.name)).all())
 
 
 def delete_person(session: Session, person_id: str) -> None:
     """Deletes a person if they have no todos."""
-    try:
-        pid = uuid.UUID(person_id)
-    except ValueError:
-        raise HTTPException(status_code=404, detail="Person not found")
+    # person_id comes as UUID from api_client, or str from somewhere else.
+    # If it's already UUID, use it. If str, convert.
+    if isinstance(person_id, uuid.UUID):
+        pid = person_id
+    else:
+        try:
+            pid = uuid.UUID(str(person_id))
+        except ValueError:
+            raise HTTPException(status_code=404, detail="Person not found")
 
     person = session.get(Person, pid)
     if not person:

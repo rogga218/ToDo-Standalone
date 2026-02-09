@@ -33,6 +33,7 @@ def get_todos(
     filter_person_id: Optional[uuid.UUID] = None,
     filter_priority: Optional[int] = None,
 ) -> List[Todo]:
+    # type: ignore[arg-type]
     query = select(Todo).options(selectinload(Todo.subtasks)).order_by(Todo.title)
 
     # Apply filters if provided (useful for direct service calls even if API didn't fully use them yet)
@@ -42,10 +43,11 @@ def get_todos(
         query = query.where(Todo.priority == filter_priority)
 
     query = query.offset(offset).limit(limit)
-    return session.exec(query).all()
+    return list(session.exec(query).all())
 
 
 def get_todo(session: Session, todo_id: uuid.UUID) -> Optional[Todo]:
+    # type: ignore[arg-type]
     query = select(Todo).where(Todo.id == todo_id).options(selectinload(Todo.subtasks))
     return session.exec(query).first()
 
@@ -55,7 +57,7 @@ def update_todo(session: Session, todo_id: uuid.UUID, todo_data: TodoUpdate) -> 
     if not db_todo:
         raise HTTPException(status_code=404, detail="Todo not found")
 
-    todo_data_dict = todo_data.dict(exclude_unset=True)
+    todo_data_dict = todo_data.model_dump(exclude_unset=True)
     todo_data_dict = {k: v for k, v in todo_data_dict.items() if v is not None}
 
     if "person_id" in todo_data_dict:

@@ -25,6 +25,7 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "name_label": "Namn",
         "existing_persons": "Befintliga Personer:",
         "name_required": "Namn krävs",
+        "name_too_short": "Namnet måste vara minst 2 tecken",
         "person_created": "Person skapad!",
         "save": "Spara",
         # Dialogs - Todo
@@ -56,6 +57,13 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "selected": "valda",
         "completed_by": "Slutförd av",
         "restore": "Återställ",
+        "description_label": "Beskrivning",
+        # Pagination
+        "page": "Sida",
+        # Person Management
+        "manage_persons": "HANTERA PERSONER",
+        "delete_person_confirm": "Ta bort person?",
+        "cannot_delete_has_todos": "Kan inte ta bort: Har uppgifter",
     },
     "en": {
         # Navigation
@@ -77,10 +85,11 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "theme_dark": "Dark",
         "theme_light": "Light",
         # Dialogs - Person
-        "dialog_new_person": "New Person",
+        "dialog_new_person": "Manage Persons",  # Updated from New Person
         "name_label": "Name",
         "existing_persons": "Existing Persons:",
         "name_required": "Name is required",
+        "name_too_short": "Name must be at least 2 characters",
         "person_created": "Person created!",
         "save": "Save",
         # Dialogs - Todo
@@ -112,6 +121,13 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "selected": "selected",
         "completed_by": "Completed by",
         "restore": "Restore",
+        "description_label": "Description",
+        # Pagination
+        "page": "Page",
+        # Person Management
+        "manage_persons": "MANAGE PERSONS",
+        "delete_person_confirm": "Delete person?",
+        "cannot_delete_has_todos": "Cannot delete: Has tasks",
     },
 }
 

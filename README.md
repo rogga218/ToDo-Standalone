@@ -13,10 +13,13 @@ This project has been refactored to specificially focus on a single, native Pyth
 -   **Responsive Design**: Works on Desktop and Mobile.
 -   **Dark Mode**: Enabled by default.
 
-## Quick Links
+## Tech Stack
 
--   **App**: [http://localhost:8080](http://localhost:8080)
--   **API JSON**: [http://localhost:8080/openapi.json](http://localhost:8080/openapi.json)
+-   **Frontend/UI**: NiceGUI (Vue.js based)
+-   **Backend**: FastAPI (Integrated)
+-   **Database**: SQLite with SQLModel (ORM)
+-   **AI**: Google Generative AI (Gemini)
+-   **Build Tool**: PyInstaller
 
 ## Project Structure
 
@@ -26,18 +29,30 @@ This project has been refactored to specificially focus on a single, native Pyth
 │   ├── config.py          # Configuration
 │   ├── database.py        # Database setup
 │   ├── models.py          # Data models
+│   ├── seed_data.py       # Test data generator
 │   ├── services/          # Business logic (Person, Todo, AI)
 │   ├── routers/           # FastAPI routers
 │   └── ui/                # Frontend components and pages
 │       ├── controller.py  # UI Controller (Logic & State)
-│       └── theme.py       # Theme management
+│       ├── layout.py      # Main layout wrapper
+│       ├── theme.py       # Theme management
+│       ├── translations.py# Localization (EN/SV)
+│       ├── api_client.py  # Internal API Client
+│       ├── components/    # Reusable UI components (Dialogs, etc.)
+│       └── pages/         # Page content (Board, History)
 ├── tests/                 # Automated tests
-│   ├── conftest.py        # Fixtures
-│   ├── test_services.py   # Unit tests
-│   └── test_api_client.py # Integration tests
+│   ├── conftest.py        # Fixtures & Reporting
+│   ├── test_services.py   # Basic Unit tests
+│   ├── test_person_service.py # Person CRUD tests
+│   ├── test_todo_service_extended.py # Advanced Todo tests
+│   ├── test_ai_service_mock.py # AI Mock tests
+│   ├── test_api_client.py # Integration tests
+│   └── test_validation.py # Data Model Validation tests
 ├── Dockerfile             # Container definition
 ├── docker-compose.yml     # Orchestration
 ├── requirements.txt       # Dependencies
+├── build.py               # Build script (PyInstaller)
+├── generate_secret.py     # Secret generator utility
 └── .env                   # Configuration file
 ```
 
@@ -45,57 +60,32 @@ This project has been refactored to specificially focus on a single, native Pyth
 
 ### Prerequisites
 
--   Podman (or Docker)
--   Optional: Python 3.12+ for local development
+-   Python 3.12+
+-   Podman (or Docker) - *Optional, for containerized run*
 
-### Run with Podman (or Docker)
+### Installation
 
-1.  Build and start the container:
+1.  **Clone the repository**:
     ```bash
-    podman-compose up --build -d
+    git clone <repository_url>
+    cd <repository_name>
     ```
 
-### Run Locally
+2.  **Create a virtual environment**:
+    ```bash
+    python -m venv .venv
+    .venv\Scripts\activate  # Windows
+    # source .venv/bin/activate # Linux/Mac
+    ```
 
-1.  Install dependencies:
+3.  **Install dependencies**:
     ```bash
     pip install -r requirements.txt
     ```
 
-2.  Run the application:
-    ```bash
-    python -m src.main
-    ```
-    
-### Building as Executable (.exe)
+### Configuration
 
-To package the application as a standalone `.exe` file (Windows):
-
-1.  **Run the Build Script**:
-    ```bash
-    python build.py
-    ```
-    This script will:
-    -   Install `pyinstaller` (if missing).
-    -   Package the application, dependencies, and assets.
-    -   Use `src/assets/logo.png` as the icon (if present).
-
-2.  **Locate the Executable**:
-    The finished file will be in the `dist/` folder:
-    ```
-    dist/ToDoApp.exe
-    ```
-
-3.  **Distribute (Portable Mode)**:
-    -   You can move `ToDoApp.exe` anywhere (USB stick, another folder, etc.).
-    -   The database `todo.db` will be created **in the same folder** as the `.exe`.
-    -   To back up your data, just copy `todo.db`.
-
-**Note**: The first run might take a few seconds to extract temporary files.
-
-## Configuration
-
-Configuration is handled via `.env` file (or environment variables).
+Create a `.env` file in the root directory (use `.env.example` as a template).
 
 | Variable | Description | Default |
 | :--- | :--- | :--- |
@@ -104,26 +94,74 @@ Configuration is handled via `.env` file (or environment variables).
 | `STORAGE_SECRET` | Secret for session encryption | `random_secret_for_session_encryption` |
 | `PORT` | Local dev port | `8080` |
 
-#### Generating a Secure Secret
-To generate a secure `STORAGE_SECRET`, run the included helper script:
+> **Tip:** To generate a secure `STORAGE_SECRET`, run `python generate_secret.py` and copy the output.
+
+## Running the App
+
+### Development Mode
+
+Run the application directly with Python:
 ```bash
-python generate_secret.py
+python -m src.main
 ```
-Copy the output and paste it into your `.env` file.
+The app will be available at [http://localhost:8080](http://localhost:8080).
 
-## Testing
+### Building as Executable (.exe)
 
-To run the automated tests, you can use `pytest`.
+To package the application as a standalone `.exe` file (Windows):
 
-### Running with Podman
+1.  **Run the Build Script**:
+    ```bash
+    python build.py
+    ```
+    This script will install `pyinstaller` (if missing) and package the app into the `dist/` folder.
+
+2.  **Run the Executable**:
+    Locate `dist/ToDoApp.exe` and run it. The database `todo.db` will be created in the same folder.
+
+### Run with Podman/Docker
+
+Build and start the container:
 ```bash
-podman-compose run --rm app pytest
+podman-compose up --build -d
 ```
-*Note: A timestamped test report (e.g., `tests/testreport/test_report_20240207_120000.txt`) will be generated after each run.*
 
-### Running Locally
-Ensure you have the test dependencies installed (`pytest`, `pytest-asyncio`, `httpx`).
+## Testing & Data
+
+This section covers how to run automated tests and seed the database with test data.
+
+### Running Tests
+
+To run the automated test suite using `pytest`:
+
+**Locally:**
 ```bash
+# Ensure test dependencies are installed
 pip install -r requirements.txt
 pytest
 ```
+
+**With Podman:**
+```bash
+podman-compose run --rm app pytest
+```
+*A timestamped test report is generated in `tests/testreport/` after each run.*
+
+### Seeding Test Data
+
+You can populate the database with mock data (sample persons and todos) for testing purposes.
+
+**Locally:**
+```bash
+python -m src.seed_data
+```
+
+**With Podman:**
+```bash
+podman-compose run --rm app python -m src.seed_data
+```
+
+## Quick Links
+
+-   **App**: [http://localhost:8080](http://localhost:8080)
+-   **API JSON**: [http://localhost:8080/openapi.json](http://localhost:8080/openapi.json)

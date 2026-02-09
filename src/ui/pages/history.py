@@ -1,6 +1,6 @@
 from nicegui import ui
-from typing import List, Dict, Callable
-
+from typing import List, Callable, Optional
+from src.models import Person, TodoRead
 
 from src.ui.translations import get_text
 
@@ -8,11 +8,11 @@ from src.ui.translations import get_text
 class HistoryView:
     def __init__(
         self,
-        todos: List[Dict],
-        persons: List[Dict],
+        todos: List[TodoRead],
+        persons: List[Person],
         on_delete: Callable,
         on_restore: Callable,
-        on_bulk_delete: Callable = None,
+        on_bulk_delete: Optional[Callable] = None,
         language: str = "sv",
     ):
         self.todos = todos
@@ -25,152 +25,153 @@ class HistoryView:
     def t(self, key):
         return get_text(key, self.language)
 
-    def toggle_select_all(self, *args):
-        # ... logic unchanged ...
-        completed_todos = [t for t in self.todos if t["completed"]]
-        all_ids = {t["id"] for t in completed_todos}
-        if self.selected_ids.issuperset(all_ids):
-            self.selected_ids.clear()
-        else:
-            self.selected_ids.update(all_ids)
-        self.refresh_ui()
-
     def render(self):
         # Filter completed
-        completed_todos = [t for t in self.todos if t["completed"]]
+        completed_todos = [t for t in self.todos if t.completed]
 
-        # Sort by deadline desc
-        completed_todos.sort(key=lambda x: x.get("deadline") or "", reverse=True)
-
-        # Selection state (using a set of IDs)
-        if not hasattr(self, "selected_ids"):
-            self.selected_ids = set()
-
-        # We actually need to pass toggle_select_all to render_content
-        with ui.column().classes("w-full p-8 max-w-4xl mx-auto") as container:
-            self.container = container  # store for refresh
-            self.render_content(
-                completed_todos,
-                self.toggle_selection,
-                self.delete_selected,
-                self.toggle_select_all,
+        # Prepare Rows
+        rows = []
+        for t in completed_todos:
+            # Use p.id and p.name
+            person_name = next(
+                (p.name for p in self.persons if str(p.id) == str(t.person_id)), "?"
+            )
+            rows.append(
+                {
+                    "id": str(t.id),
+                    "title": t.title,
+                    "description": t.description or "",
+                    "person": person_name,
+                    "deadline": str(t.deadline) if t.deadline else "",
+                    "priority": t.priority,
+                    "_raw": t,  # Keep full object for actions
+                }
             )
 
-    def refresh_ui(self):
-        self.container.clear()
-        # Re-fetch or re-filter? locally re-filter
-        completed_todos = [t for t in self.todos if t["completed"]]
-        completed_todos.sort(key=lambda x: x.get("deadline") or "", reverse=True)
+        # Columns
+        columns = [
+            {
+                "name": "title",
+                "label": self.t("title_label"),
+                "field": "title",
+                "sortable": True,
+                "align": "left",
+            },
+            {
+                "name": "person",
+                "label": self.t("person_label"),
+                "field": "person",
+                "sortable": True,
+                "align": "left",
+            },
+            {
+                "name": "description",
+                "label": self.t("description_label"),
+                "field": "description",
+                "sortable": True,
+                "align": "left",
+            },
+            {
+                "name": "deadline",
+                "label": self.t("deadline_label"),
+                "field": "deadline",
+                "sortable": True,
+                "align": "left",
+            },
+            {
+                "name": "priority",
+                "label": self.t("priority_label"),
+                "field": "priority",
+                "sortable": True,
+                "align": "center",
+            },
+            {
+                "name": "actions",
+                "label": "",
+                "field": "actions",
+                "align": "center",
+            },
+        ]
 
-        with self.container:
-            self.render_content(
-                completed_todos,
-                lambda tid: self.toggle_selection(tid),
-                self.delete_selected,
-                self.toggle_select_all,
+        # Main Container with Scroll
+        # Full width as requested: removed max-w-6xl and mx-auto
+        with ui.column().classes("w-full h-full p-4 overflow-y-auto"):
+            # Header Row
+            with ui.row().classes("w-full justify-between items-center mb-4"):
+                ui.label(self.t("history")).classes(
+                    "text-2xl font-bold !text-black dark:!text-white"
+                )
+                # Placeholder for Bulk Action Button (will be moved here)
+                bulk_action_container = ui.row()
+
+            if not rows:
+                ui.label(self.t("no_completed_tasks")).classes(
+                    "text-gray-600 dark:text-gray-400 italic"
+                )
+                return
+
+            # Table
+            # "Native" styling: rely on NiceGUI/Quasar to handle dark mode via ui.dark_mode()
+            # Pagination: rowsPerPage 0 means "All" (infinite scroll)
+            table = (
+                ui.table(
+                    columns=columns,
+                    rows=rows,
+                    selection="multiple",
+                    row_key="id",
+                    pagination={"rowsPerPage": 0},
+                )
+                .classes("w-full")
+                .props("flat bordered")
             )
 
-    def toggle_selection(self, todo_id):
-        if todo_id in self.selected_ids:
-            self.selected_ids.remove(todo_id)
-        else:
-            self.selected_ids.add(todo_id)
-        self.refresh_ui()
+            # Register event listeners
+            def restore_row(e):
+                row_id = e.args
+                # t.id is UUID, row_id is string from table
+                todo = next((t for t in self.todos if str(t.id) == str(row_id)), None)
+                if todo:
+                    self.on_restore(todo)
 
-    async def delete_selected(self, *args):
-        to_delete = [t for t in self.todos if t["id"] in self.selected_ids]
+            def delete_row(e):
+                row_id = e.args
+                todo = next((t for t in self.todos if str(t.id) == str(row_id)), None)
+                if todo:
+                    self.on_delete(todo)
 
-        if self.on_bulk_delete:
-            await self.on_bulk_delete(to_delete)
-        else:
-            for t in to_delete:
-                await self.on_delete(t)
+            table.on("restore", restore_row)
+            table.on("delete", delete_row)
 
-        self.selected_ids.clear()
+            # Bulk Actions Logic
+            async def delete_selected():
+                selected_rows = table.selected
+                if not selected_rows:
+                    return
 
-    def render_content(self, completed_todos, toggle_fn, delete_fn, toggle_all_fn):
-        ui.label(self.t("history_header")).classes(
-            "text-3xl font-bold text-black dark:text-white mb-8"
-        )
+                ids = {str(r["id"]) for r in selected_rows}  # r is dict from table row
+                to_delete = [t for t in self.todos if str(t.id) in ids]
 
-        if not completed_todos:
-            ui.label(self.t("no_completed_tasks")).classes(
-                "text-gray-600 dark:text-gray-400 italic"
-            )
-            return
+                if self.on_bulk_delete:
+                    await self.on_bulk_delete(to_delete)
+                else:
+                    for t in to_delete:
+                        await self.on_delete(t)
 
-        with ui.row().classes("w-full items-center justify-between mb-4"):
-            ui.button(
-                self.t("select_all"), icon="select_all", on_click=toggle_all_fn
-            ).props("flat color=blue")
+            # Create Button and Move to Header
+            with bulk_action_container:
+                ui.button(
+                    self.t("delete"), icon="delete", on_click=delete_selected
+                ).props("color=red").bind_visibility_from(
+                    table, "selected", backward=lambda s: len(s) > 0
+                )
 
-            # Bulk Actions
-            if self.selected_ids:
-                with ui.row().classes(
-                    "items-center bg-gray-200 dark:bg-slate-800 p-2 rounded"
-                ):
-                    ui.label(f"{len(self.selected_ids)} {self.t('selected')}").classes(
-                        "text-black dark:text-white font-bold mr-4"
-                    )
-                    ui.button(
-                        f"{self.t('delete')} ({len(self.selected_ids)})",
-                        icon="delete",
-                        on_click=delete_fn,
-                    ).props("flat color=red")
-
-        # List
-        for todo in completed_todos:
-            is_selected = todo["id"] in self.selected_ids
-            # Styles
-            # Remove bg-white (default). Keep dark overrides.
-            base_bg = "dark:bg-slate-800"
-            selected_bg = "bg-blue-50 dark:bg-slate-700"
-
-            card_class = f"w-full {base_bg} border-l-4 border-green-500 mb-2 p-4"
-            if is_selected:
-                card_class = f"w-full {selected_bg} border-l-4 border-red-500 mb-2 p-4"
-
-            with ui.card().classes(card_class):
-                with ui.row().classes("w-full items-center gap-4"):
-                    # Checkbox
-                    ui.checkbox(
-                        value=is_selected,
-                        on_change=lambda e, tid=todo["id"]: toggle_fn(tid),
-                    )
-
-                    # Content (Flexible)
-                    with ui.column().classes("gap-1 flex-1"):
-                        ui.label(todo["title"]).classes(
-                            "text-lg font-bold line-through decoration-gray-500"
-                        )
-                        if todo.get("description"):
-                            ui.label(todo.get("description")).classes(
-                                "text-sm opacity-70"
-                            )
-
-                        person_name = next(
-                            (
-                                p["name"]
-                                for p in self.persons
-                                if p["id"] == todo["person_id"]
-                            ),
-                            "?",
-                        )
-                        ui.label(
-                            f"{self.t('completed_by')}: {person_name} | {self.t('deadline_label')}: {todo.get('deadline')}"
-                        ).classes("text-xs opacity-60")
-
-                    # Individual Actions
-                    with ui.row().classes("gap-2"):
-                        ui.button(
-                            icon="undo",
-                            on_click=lambda t=todo: self.on_restore(t),
-                        ).props("flat dense round").classes(
-                            "text-gray-600 dark:text-white"
-                        ).tooltip(self.t("restore"))
-                        ui.button(
-                            icon="delete",
-                            on_click=lambda t=todo: self.on_delete(t),
-                        ).props("flat dense round").classes(
-                            "text-red-600 dark:text-red-400"
-                        ).tooltip(self.t("delete"))
+            # Slots for Actions Column
+            with table.add_slot("body-cell-actions"):
+                # Using ui.row to ensure buttons are side-by-side
+                with ui.row().classes("items-center justify-center no-wrap gap-1"):
+                    ui.button(icon="restore").props(
+                        "flat dense round color=primary"
+                    ).on("click", js_handler="() => $emit('restore', props.row.id)")
+                    ui.button(icon="delete").props(
+                        "flat dense round color=negative"
+                    ).on("click", js_handler="() => $emit('delete', props.row.id)")

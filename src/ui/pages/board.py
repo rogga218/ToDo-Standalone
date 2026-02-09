@@ -1,6 +1,8 @@
 from nicegui import ui
-from typing import List, Dict, Callable
+from typing import List, Dict, Callable, Any
 from src.ui.api_client import api
+from src.config import get_settings
+from src.models import Person, TodoRead
 
 
 from src.ui.translations import get_text
@@ -9,8 +11,8 @@ from src.ui.translations import get_text
 class BoardView:
     def __init__(
         self,
-        todos: List[Dict],
-        persons: List[Dict],
+        todos: List[TodoRead],
+        persons: List[Person],
         on_update: Callable,
         on_edit: Callable,
         on_delete: Callable,
@@ -37,27 +39,27 @@ class BoardView:
 
         # 1. Filter Todos
         # Show if: Not completed OR (Completed AND Deadline >= Today)
-        active_todos = []
+        active_todos: List[TodoRead] = []
         for t in self.todos:
-            if not t["completed"]:
+            if not t.completed:
                 active_todos.append(t)
             else:
                 # If completed, check deadline
-                deadline = t.get("deadline")
+                deadline = t.deadline
                 if deadline and deadline >= today_date:
                     active_todos.append(t)
 
         # 2. Sort Everyone (Prio Asc, then Title Asc)
         # Note: Priority 1=High, 3=Low. So Asc is correct.
-        active_todos.sort(key=lambda t: (t["priority"], t["title"]))
+        active_todos.sort(key=lambda t: (t.priority, t.title))
 
         # 3. Categorize
-        overdue = []
-        today = []
-        future_map = {}  # date -> list
+        overdue: List[TodoRead] = []
+        today: List[TodoRead] = []
+        future_map: Dict[str, List[TodoRead]] = {}  # date -> list
 
         for todo in active_todos:
-            deadline = todo.get("deadline")
+            deadline = todo.deadline
             if not deadline:
                 key = self.t("no_date")
                 if key not in future_map:
@@ -70,12 +72,14 @@ class BoardView:
             elif deadline == today_date:
                 today.append(todo)
             else:
-                if deadline not in future_map:
-                    future_map[deadline] = []
-                future_map[deadline].append(todo)
+                d_str = str(deadline)
+                if d_str not in future_map:
+                    future_map[d_str] = []
+                future_map[d_str].append(todo)
 
         # 4. Build Columns List
-        columns_data = []
+        # Explicit type hint to help analyzer
+        columns_data: List[Dict[str, Any]] = []
 
         # Overdue allowed if exists
         if overdue:
@@ -135,72 +139,66 @@ class BoardView:
                 with ui.column().classes(
                     f"min-w-[320px] flex-1 h-full rounded-xl p-4 {col['bg']} border"
                 ):
-                    ui.label(f"{col['title']} ({len(col['items'])})").classes(
-                        "text-lg font-bold mb-4 text-gray-900 dark:text-white"
-                    )
+                    # Header with Indicator
+                    # Explicit cast to list
+                    items: List[TodoRead] = col["items"]
+                    all_completed = not items or all(t.completed for t in items)
+                    indicator_color = "bg-green-500" if all_completed else "bg-red-500"
+
+                    with ui.row().classes("items-center mb-4"):
+                        ui.label().classes(
+                            f"w-3 h-3 rounded-full mr-2 {indicator_color}"
+                        )
+                        ui.label(f"{col['title']} ({len(items)})").classes(
+                            "text-lg font-bold text-gray-900 dark:text-white"
+                        )
 
                     with ui.scroll_area().classes("w-full h-full"):
                         with ui.column().classes("gap-3 w-full"):
-                            for todo in col["items"]:
+                            for todo in items:
                                 self.render_card(todo)
 
-    def render_card(self, todo):
+    def render_card(self, todo: TodoRead):
         # Card Styling: "P1, P2" removal, colored relief
         prio_color_border = {
             1: "border-l-4 border-red-500",
             2: "border-l-4 border-yellow-500",
             3: "border-l-4 border-green-500",
-        }.get(todo["priority"], "border-l-4 border-gray-500")
+        }.get(todo.priority, "border-l-4 border-gray-500")
 
-        # Styling for completed
-        # Remove explicit bg-white/text-black to let Quasar handle defaults,
-        # but add dark:bg-slate-800 for custom dark shade if properly triggered.
-        # Fallback: bg-white for light (implicitly via Quasar? No q-card is white).
-        # We explicitly set bg-white for Light, and bg-slate-800 for Dark.
-        # But if 'dark:' fails, we get default (which might be transparent or white).
-        # Safe bet: "bg-white dark:bg-slate-800" SHOULD work if Tailwind is aware.
-        # If user saw white cards in dark mode, 'dark:' failed or bg-white won.
-        # Let's try: "bg-white text-black dark:bg-slate-800 dark:text-white"
-        # AND add 'q-card--dark' manually? No.
-
-        # Simplified: Use Quasar default classes where possible, or specific gray scale.
-        # Quasar q-card is white by default.
-        # In dark mode, it becomes dark IF q-card--dark is set OR if we override.
-        # We want slate-800 in dark mode.
-        # We REMOVE bg-white so it defaults to white (or transparent if flat).
-        # We keep dark:bg-slate-800.
         card_classes = f"w-full q-pa-sm hovered-scale border-solid {prio_color_border} dark:bg-slate-800"
 
-        if todo["completed"]:
+        if todo.completed:
             card_classes += " opacity-60"
 
         with ui.card().classes(card_classes):
             # Header: Person
+            # Access p.id and p.name
             person_name = next(
-                (p["name"] for p in self.persons if p["id"] == todo["person_id"]), "?"
+                (p.name for p in self.persons if str(p.id) == str(todo.person_id)), "?"
             )
 
             with ui.row().classes(
                 "w-full justify-between items-center text-xs opacity-70 mb-1"
             ):
                 ui.label(person_name).classes("font-bold")
-                if todo.get("deadline"):
-                    ui.label(todo["deadline"])
+                if todo.deadline:
+                    ui.label(str(todo.deadline))
 
             # Title & Desc ("visar hela texten")
             # Remove text-black. Inherit color.
             title_classes = "text-md font-bold mb-1 leading-tight block break-words"
-            if todo["completed"]:
+            if todo.completed:
                 title_classes += " line-through opacity-50"
 
-            ui.label(todo["title"]).classes(title_classes)
-            if todo.get("description"):
-                ui.label(todo["description"]).classes(
+            ui.label(todo.title).classes(title_classes)
+            if todo.description:
+                ui.label(todo.description).classes(
                     "text-xs opacity-80 mb-2 block break-words whitespace-pre-wrap"
                 )
 
             # Subtasks
-            subtasks = todo.get("subtasks", [])
+            subtasks = todo.subtasks
             if subtasks:
                 with (
                     ui.expansion()
@@ -212,14 +210,15 @@ class BoardView:
                     for sub in subtasks:
                         with ui.row().classes("items-start gap-2 no-wrap w-full"):
                             ui.checkbox(
-                                value=sub["completed"],
+                                value=sub.completed,
+                                # type: ignore[arg-type]
                                 on_change=lambda e, s=sub: self.toggle_subtask(
                                     todo, s, e.value
                                 ),
                             ).props("dense")
-                            ui.label(sub["title"]).classes(
+                            ui.label(sub.title).classes(
                                 "flex-1 break-words opacity-80"
-                                + (" line-through" if sub["completed"] else "")
+                                + (" line-through" if sub.completed else "")
                             )
 
             # Actions
@@ -227,24 +226,26 @@ class BoardView:
                 # Explicitly set colors for icons to handle dark mode
                 icon_classes = "text-gray-600 dark:text-white"
 
-                ai_btn = (
-                    ui.button(
-                        icon="smart_toy",
-                        on_click=lambda: self.on_generate_subtasks(todo),
+                # Check for Gemini Key
+                if get_settings().GEMINI_API_KEY:
+                    ai_btn = (
+                        ui.button(
+                            icon="smart_toy",
+                            on_click=lambda: self.on_generate_subtasks(todo),
+                        )
+                        .props("flat dense size=sm round")
+                        .classes(icon_classes)
+                        .tooltip(self.t("ai_subtasks"))
                     )
-                    .props("flat dense size=sm round")
-                    .classes(icon_classes)
-                    .tooltip(self.t("ai_subtasks"))
-                )
-                if subtasks:
-                    ai_btn.disable()
-                    ai_btn.tooltip(self.t("subtasks_exist"))
+                    if subtasks:
+                        ai_btn.disable()
+                        ai_btn.tooltip(self.t("subtasks_exist"))
 
                 ui.button(icon="edit", on_click=lambda: self.on_edit(todo)).props(
                     "flat dense size=sm round"
                 ).classes(icon_classes).tooltip(self.t("edit"))
 
-                if todo["completed"]:
+                if todo.completed:
                     ui.button(
                         icon="replay", on_click=lambda: self.toggle_complete(todo)
                     ).props("flat dense size=sm round").classes(
@@ -261,12 +262,30 @@ class BoardView:
                     "flat dense size=sm round"
                 ).classes("text-red-600 dark:text-red-400").tooltip(self.t("delete"))
 
-    async def toggle_complete(self, todo):
-        todo["completed"] = not todo["completed"]
+    async def toggle_complete(self, todo: TodoRead):
+        # We need to send dictionary to update callback which eventually calls API
+        # Or better update on_update to accept object
+        # on_update in controller already accepts object.
+        # But here we modify it locally first?
+        # Actually controller's on_update calls api.update_todo(model_dump)
+        # We can just toggle and call on_update.
+        # Note: We can't modify the object in place if it is immutable, but Pydantic models are mutable by default unless frozen.
+
+        # Create a copy or just modify.
+        # Ideally we don't modify the local object until confirmed, but for UI responsiveness we might.
+        # Let's pass the object to on_update, but we need to toggle the logic.
+        # Since on_update takes the *updated* object/dict.
+
+        # Let's create a model copy with updated field.
+        # todo.completed = not todo.completed
+        # await self.on_update(todo)
+
+        # However, to avoid mutation validaton issues if any, let's just toggle and send.
+        todo.completed = not todo.completed
         await self.on_update(todo)
 
     async def toggle_subtask(self, todo, subtask, completed):
-        await api.toggle_subtask(subtask["id"], completed)
+        await api.toggle_subtask(str(subtask.id), completed)
         # Refresh logic should be handled by parent re-render or explicit refresh
         # But for now we rely on the parent refreshing the data
         # To make it snappy we might want optimistic updates but let's stick to refresh for MVP

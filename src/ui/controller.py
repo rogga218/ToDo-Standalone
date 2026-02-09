@@ -1,8 +1,8 @@
 import asyncio
-from typing import List, Dict, Any
+from typing import List
 from nicegui import ui, app
 
-from src.models import Person
+from src.models import Person, TodoRead
 from src.ui.api_client import api
 from src.ui.components.dialogs import PersonDialog, TodoDialog
 from src.ui.pages.board import BoardView
@@ -12,7 +12,7 @@ from src.ui.layout import Layout
 
 class ToDoController:
     def __init__(self):
-        self.todos: List[Dict[str, Any]] = []
+        self.todos: List[TodoRead] = []
         self.persons: List[Person] = []
         self.content_container = None
         self.layout_component = None
@@ -62,7 +62,10 @@ class ToDoController:
 
         async def handle_create_person(e):
             d = PersonDialog(
-                self.persons, on_success=self.refresh, language=self.language
+                self.persons,
+                self.todos,  # Pass todos to check for assignment
+                on_success=self.refresh,
+                language=self.language,
             )
             d.open()
 
@@ -115,54 +118,79 @@ class ToDoController:
         filtered_todos = self.todos
         if filter_person:
             filtered_todos = [
-                t for t in filtered_todos if str(t["person_id"]) == str(filter_person)
+                t for t in filtered_todos if str(t.person_id) == str(filter_person)
             ]
         if filter_priority:
             filtered_todos = [
-                t for t in filtered_todos if str(t["priority"]) == str(filter_priority)
+                t for t in filtered_todos if str(t.priority) == str(filter_priority)
             ]
 
         with self.content_container:
             # Action Handlers
-            async def on_update(todo):
-                res = await api.update_todo(todo)
+            async def on_update(todo: TodoRead):
+                # UI sends TodoRead object, but API expects dict for update_todo (for now)
+                # ApiClient.update_todo takes Dict. We can pass model_dump().
+                # But wait, ApiClient.update_todo logic: "todo['id']" -> UUID.
+                # If we pass object, we should update ApiClient or convert here.
+                # Let's convert here to minimize ApiClient perturbation for now,
+                # OR better: update ApiClient to accept TodoUpdate or similar.
+                # For quick fix: todo is TodoRead object.
+                payload = todo.model_dump()
+                res = await api.update_todo(payload)
                 if res["success"]:
                     ui.notify("Uppdaterad", type="positive")
                     await self.refresh()
                 else:
                     ui.notify(res["error"], type="negative")
 
-            def on_edit(todo):
+            def on_edit(todo: TodoRead):
                 d = TodoDialog(
                     self.persons, on_success=self.refresh, language=self.language
                 )
-                d.edit(todo)
+                # Dialog expects Dict currently? check Dialogs.
+                # TodoDialog.edit takes props. We should verify TodoDialog.
+                # For now, pass dict to Dialog to be safe or update Dialog.
+                # Let's update Dialog to accept TodoRead!
+                # But I haven't updated Dialog fully yet.
+                # To be safe and compliant with "Fix Warnings":
+                # I will convert to dict for the Dialog for now, or update Dialog.
+                # Updating Dialog is better.
+                d.edit(todo.model_dump())
 
-            async def on_delete(todo):
-                res = await api.delete_todo(todo["id"])
+            async def on_delete(todo: TodoRead):
+                res = await api.delete_todo(str(todo.id))
                 if res["success"]:
                     ui.notify("Borttagen", type="positive")
                     await self.refresh()
                 else:
                     ui.notify(res["error"], type="negative")
 
-            async def on_restore(todo):
-                todo["completed"] = False
-                await on_update(todo)
+            async def on_restore(todo: TodoRead):
+                # toggle completed
+                # todo is object.
+                # We need to construct payload for update.
+                payload = todo.model_dump()
+                payload["completed"] = False
+                res = await api.update_todo(payload)
+                if res["success"]:
+                    ui.notify("Uppdaterad", type="positive")
+                    await self.refresh()
+                else:
+                    ui.notify(res["error"], type="negative")
 
-            async def on_generate_subtasks(todo):
+            async def on_generate_subtasks(todo: TodoRead):
                 ui.notify("Genererar...", type="info")
-                res = await api.generate_subtasks(todo["id"])
+                res = await api.generate_subtasks(str(todo.id))
                 if res["success"]:
                     ui.notify("Klar!", type="positive")
                     await self.refresh()
                 else:
                     ui.notify(res["error"], type="negative")
 
-            async def on_bulk_delete(todos):
+            async def on_bulk_delete(todos: List[TodoRead]):
                 ui.notify(f"Raderar {len(todos)} uppgifter...", type="info")
                 for todo in todos:
-                    await api.delete_todo(todo["id"])
+                    await api.delete_todo(str(todo.id))
                 ui.notify("Klar!", type="positive")
                 await self.refresh()
 
@@ -181,19 +209,25 @@ class ToDoController:
 
                 # Pagination Controls
                 with ui.row().classes(
-                    "absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-slate-800 p-2 rounded gap-2"
+                    "absolute bottom-4 left-1/2 transform -translate-x-1/2 "
+                    "bg-white dark:bg-slate-800 p-2 rounded-full shadow-lg "
+                    "border border-gray-200 dark:border-gray-700 gap-4 items-center"
                 ):
                     ui.button(
                         icon="chevron_left",
                         on_click=lambda: ui.navigate.to(
                             f"/board?page={max(0, page_idx - 1)}"
                         ),
-                    ).props("flat dense")
-                    ui.label(f"Sida {page_idx + 1}").classes("text-sm pt-1")
+                    ).props("flat dense round").classes("text-black dark:text-white")
+
+                    ui.label(
+                        f"{self.layout_component.t('page') if self.layout_component else 'Page'} {page_idx + 1}"
+                    ).classes("text-sm font-bold text-black dark:text-white")
+
                     ui.button(
                         icon="chevron_right",
                         on_click=lambda: ui.navigate.to(f"/board?page={page_idx + 1}"),
-                    ).props("flat dense")
+                    ).props("flat dense round").classes("text-black dark:text-white")
 
             elif current_page == "history":
                 HistoryView(

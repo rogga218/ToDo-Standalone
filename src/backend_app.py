@@ -1,6 +1,7 @@
 from fastapi import FastAPI
 from sqlmodel import Session, select
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
 
 from src.database import engine, create_db_and_tables
 from src.models import Person
@@ -22,7 +23,18 @@ def create_default_persons():
 
 # --- App Setup ---
 
-app = FastAPI(title=get_settings().APP_NAME, debug=get_settings().DEBUG)
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("--- LOADING REFACTORED APP (DI + CONFIG) ---")
+    create_db_and_tables()
+    create_default_persons()
+    yield
+
+
+app = FastAPI(
+    title=get_settings().APP_NAME, debug=get_settings().DEBUG, lifespan=lifespan
+)
 
 app.add_middleware(
     CORSMiddleware,
@@ -31,13 +43,6 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-
-@app.on_event("startup")
-def on_startup():
-    logger.info("--- LOADING REFACTORED APP (DI + CONFIG) ---")
-    create_db_and_tables()
-    create_default_persons()
 
 
 # --- Include Routers ---

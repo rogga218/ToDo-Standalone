@@ -61,7 +61,7 @@ class Settings(BaseSettings):
 
         if getattr(sys, "frozen", False):
             # PyInstaller unpacks data to sys._MEIPASS
-            base_path = sys._MEIPASS
+            base_path = getattr(sys, "_MEIPASS", os.getcwd())
         else:
             # Normal python execution
             base_path = os.getcwd()

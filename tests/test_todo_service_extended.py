@@ -50,6 +50,7 @@ def test_subtask_lifecycle(session: Session):
 
     # Verify linkage
     refreshed_todo = todo_service.get_todo(session, todo.id)
+    assert refreshed_todo is not None
     assert len(refreshed_todo.subtasks) == 1
     assert refreshed_todo.subtasks[0].id == st.id
 
@@ -62,6 +63,7 @@ def test_subtask_lifecycle(session: Session):
 
     # Verify deletion
     refreshed_todo_2 = todo_service.get_todo(session, todo.id)
+    assert refreshed_todo_2 is not None
     assert len(refreshed_todo_2.subtasks) == 0
 
 

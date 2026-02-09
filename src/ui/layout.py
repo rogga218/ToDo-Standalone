@@ -1,11 +1,13 @@
-from nicegui import ui
-from typing import Callable, Dict, List
+from nicegui import ui, app
+from typing import Callable, List, Optional
+from src.ui.translations import get_text
+from src.models import Person
 
 
 class Layout:
     def __init__(
         self,
-        persons: List[Dict],  # Needed for filters
+        persons: List[Person],  # Needed for filters
         current_page: str,
         on_filter_change: Callable,
         on_refresh: Callable,
@@ -14,7 +16,7 @@ class Layout:
         filter_person: str = "",
         filter_priority: str = "",
         language: str = "sv",
-        on_language_change: Callable = None,
+        on_language_change: Optional[Callable] = None,
     ):
         self.persons = persons
         self.current_page = current_page
@@ -28,63 +30,18 @@ class Layout:
         self.on_language_change = on_language_change
 
         self.dark_mode = ui.dark_mode()
-        # Default to Dark Mode if first visit (value is None/False initially sometimes?)
-        # Actually ui.dark_mode value persists. But to ensure "Default is Dark", we can check if it's explicitly False?
-        # A simpler way is to just enable it. But we don't want to override user pref if they set Light.
-        # But user reported "Light mode seems default now".
-        # Let's force enable it once to fix their state, or use a startup handler.
-        # Ideally: ui.run(dark=True).
-        # Let's try: self.dark_mode.enable() in __init__ is risky if it resets on every nav.
-        # Better: ui.run(dark=True) in main.py updates the client value.
-        # Issue might be persistence overriding ui.run(dark=True).
-        # We can add a startup script check.
-        # For now, let's trust that fixing the card styles resolves the "Looks like light mode" issue.
-        # BUT, if cards were white on black bg, then dark mode WAS active partially?
-        # No, main bg is hardcoded in main.py. Cards had `bg-white`.
-        # If I remove `bg-white` and leave `bg-slate-800` for dark, I need to ensure `dark` class works.
-        # I'll enable it here just to be safe for this session.
-        self.dark_mode.enable()
+        # Initialize dark mode from storage (default to True if not set)
+        stored_dark = app.storage.user.get("dark_mode", True)
+        self.dark_mode.value = stored_dark
 
-        # Translations
-        self.translations = {
-            "sv": {
-                "dashboard": "Översikt",
-                "history": "Historik",
-                "new_task": "Ny Uppgift",
-                "new_person": "Ny Person",
-                "filter_label": "FILTER",
-                "all_persons": "Alla Personer",
-                "all_priorities": "Alla Prioriteringar",
-                "priority_label": "Prioritet",
-                "person_label": "Person",
-                "refresh": "Uppdatera",
-                "high": "Hög",
-                "medium": "Medium",
-                "low": "Låg",
-                "theme_dark": "Mörkt",
-                "theme_light": "Ljust",
-            },
-            "en": {
-                "dashboard": "Dashboard",
-                "history": "History",
-                "new_task": "New Task",
-                "new_person": "New Person",
-                "filter_label": "FILTERS",
-                "all_persons": "All Persons",
-                "all_priorities": "All Priorities",
-                "priority_label": "Priority",
-                "person_label": "Person",
-                "refresh": "Refresh",
-                "high": "High",
-                "medium": "Medium",
-                "low": "Low",
-                "theme_dark": "Dark",
-                "theme_light": "Light",
-            },
-        }
+    def toggle_dark_mode(self):
+        print(f"Toggling dark mode. Current: {self.dark_mode.value}")
+        self.dark_mode.toggle()
+        print(f"New value: {self.dark_mode.value}")
+        app.storage.user["dark_mode"] = self.dark_mode.value
 
     def t(self, key):
-        return self.translations.get(self.language, {}).get(key, key)
+        return get_text(key, self.language)
 
     def render_sidebar(self):
         with (
@@ -96,7 +53,28 @@ class Layout:
             with ui.column().classes("w-full items-center mb-6"):
                 # In light mode, might want a different logo or just same?
                 # Assuming logo works on both or we might need opacity.
-                ui.image("/assets/logo.png").classes("w-64 mb-4")
+                # Logo (Inline SVG for Dark Mode support)
+                with (
+                    ui.element("svg")
+                    .props('viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg"')
+                    .classes("w-32 mb-4")
+                ):
+                    # Outline Rect
+                    ui.element("rect").props(
+                        'x="15" y="15" width="70" height="70" rx="10" stroke-width="6" fill="none"'
+                    ).classes("stroke-zinc-800 dark:stroke-zinc-100")
+                    # Line 1
+                    ui.element("path").props(
+                        'd="M30 40 L70 40" stroke-width="6" stroke-linecap="round"'
+                    ).classes("stroke-zinc-800 dark:stroke-zinc-100")
+                    # Line 2
+                    ui.element("path").props(
+                        'd="M30 60 L60 60" stroke-width="6" stroke-linecap="round"'
+                    ).classes("stroke-zinc-800 dark:stroke-zinc-100")
+                    # Circle
+                    ui.element("circle").props('cx="75" cy="75" r="12"').classes(
+                        "fill-amber-400 dark:fill-amber-300"
+                    )
 
                 with ui.row().classes("gap-4"):
                     # Theme Toggle
@@ -104,7 +82,7 @@ class Layout:
                     # Lets use !text classes.
                     # Actually, if I use style="color: ..." it might not be responsive to dark class easily without css var.
                     # Let's stick to Tailwind !important
-                    ui.button(icon=icon, on_click=self.dark_mode.toggle).props(
+                    ui.button(icon=icon, on_click=self.toggle_dark_mode).props(
                         "flat round size=sm"
                     ).classes("!text-zinc-900 dark:!text-zinc-100").tooltip(
                         "Toggle Theme"
@@ -114,7 +92,12 @@ class Layout:
                     flag = "🇸🇪" if self.language == "sv" else "🇬🇧"
                     next_lang = "en" if self.language == "sv" else "sv"
                     ui.button(
-                        flag, on_click=lambda: self.on_language_change(next_lang)
+                        flag,
+                        on_click=lambda: (
+                            self.on_language_change(next_lang)
+                            if self.on_language_change
+                            else None
+                        ),
                     ).props("flat round size=sm").classes(
                         "!text-zinc-900 dark:!text-zinc-100"
                     ).tooltip("Switch Language")
@@ -125,11 +108,14 @@ class Layout:
                 def nav_btn(label, target, active_key):
                     is_active = self.current_page == active_key
                     # Active: Blue (keep)
-                    # Inactive: Light: Gray-300, Dark: Slate-800
+                    # Inactive Request: "svart i dark-mode och vit i light-mode" (Black text in Dark, White in Light)
+                    # This implies we need high contrast backgrounds:
+                    # Light Mode: Dark Background (e.g., Slate-700) -> White Text
+                    # Dark Mode: Light Background (e.g., Gray-200) -> Black Text
                     bg = (
                         "bg-blue-600 text-white"
                         if is_active
-                        else "bg-gray-300 hover:bg-gray-400 dark:bg-slate-800 dark:hover:bg-slate-700 text-black dark:text-white"
+                        else "bg-slate-700 hover:bg-slate-600 text-white dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-black"
                     )
                     ui.button(label, on_click=lambda: ui.navigate.to(target)).classes(
                         f"w-full {bg}"
@@ -150,7 +136,8 @@ class Layout:
 
             # Person Filter
             person_options = {"": self.t("all_persons")}
-            person_options.update({p["id"]: p["name"] for p in self.persons})
+            # Access Person attributes
+            person_options.update({str(p.id): p.name for p in self.persons})
 
             ui.select(
                 options=person_options,
@@ -175,13 +162,13 @@ class Layout:
 
             # Actions
             with ui.column().classes("w-full gap-2"):
-                ui.button(self.t("new_person"), on_click=self.on_create_person).classes(
-                    "w-full bg-green-600 hover:bg-green-700 text-white"
-                )
+                ui.button(
+                    self.t("manage_persons"), on_click=self.on_create_person
+                ).classes("w-full bg-green-600 hover:bg-green-700 text-white")
 
             # Refresh
             ui.button(
                 self.t("refresh"), on_click=self.on_refresh, icon="refresh"
             ).classes(
-                "w-full mt-auto bg-gray-300 dark:bg-slate-700 hover:bg-gray-400 dark:hover:bg-slate-600 !text-zinc-900 dark:!text-zinc-100"
+                "w-full mt-auto bg-slate-700 hover:bg-slate-600 text-white dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-black"
             )

@@ -36,6 +36,8 @@ def generate_subtasks(session: Session, todo_id: uuid.UUID) -> Todo:
 
         # SDK 2.0 response parsing might differ
         response_text = response.text
+        if not response_text:
+            raise ValueError("Empty response from AI")
 
         # Clean up markdown code blocks if present (Gemini loves ```json)
         if "```" in response_text:
@@ -54,9 +56,12 @@ def generate_subtasks(session: Session, todo_id: uuid.UUID) -> Todo:
 
         # Refresh with subtasks loaded
         query = (
+            # type: ignore[arg-type]
             select(Todo).where(Todo.id == todo_id).options(selectinload(Todo.subtasks))
         )
         todo = session.exec(query).first()
+        if not todo:
+            raise HTTPException(status_code=404, detail="Todo not found after update")
         return todo
 
     except Exception as e:

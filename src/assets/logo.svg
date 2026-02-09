@@ -1,0 +1,14 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+  <style>
+    .stroke-theme { stroke: #333; }
+    .fill-theme { fill: #FFC107; }
+    @media (prefers-color-scheme: dark) {
+      .stroke-theme { stroke: #eee; }
+      .fill-theme { fill: #FFD54F; }
+    }
+  </style>
+  <rect x="15" y="15" width="70" height="70" rx="10" class="stroke-theme" stroke-width="6" fill="none"/>
+  <path d="M30 40 L70 40" class="stroke-theme" stroke-width="6" stroke-linecap="round"/>
+  <path d="M30 60 L60 60" class="stroke-theme" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="75" cy="75" r="12" class="fill-theme" />
+</svg>
