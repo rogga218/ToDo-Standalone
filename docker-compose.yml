@@ -14,5 +14,6 @@ services:
       - ./todo.db:/app/todo.db # Persist SQLite db
     environment:
       - PYTHONUNBUFFERED=1
+      - PYTHONDONTWRITEBYTECODE=1
       - DATABASE_URL=sqlite:///todo.db
 

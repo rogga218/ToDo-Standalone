@@ -44,7 +44,7 @@ class HistoryView:
                     "person": person_name,
                     "deadline": str(t.deadline) if t.deadline else "",
                     "priority": t.priority,
-                    "_raw": t,  # Keep full object for actions
+                    "_raw": t.model_dump(),  # Keep full object (as dict) for actions
                 }
             )
 

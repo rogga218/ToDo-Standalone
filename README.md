@@ -47,7 +47,10 @@ This project has been refactored to specificially focus on a single, native Pyth
 │   ├── test_todo_service_extended.py # Advanced Todo tests
 │   ├── test_ai_service_mock.py # AI Mock tests
 │   ├── test_api_client.py # Integration tests
-│   └── test_validation.py # Data Model Validation tests
+│   ├── test_validation.py # Data Model Validation tests
+│   ├── test_ui_history_serialization.py # UI Serialization tests
+│   ├── test_ui_dialogs.py # UI Dialog tests
+│   └── test_ui_controller.py # UI Controller tests
 ├── Dockerfile             # Container definition
 ├── docker-compose.yml     # Orchestration
 ├── requirements.txt       # Dependencies
@@ -140,6 +143,11 @@ To run the automated test suite using `pytest`:
 pip install -r requirements.txt
 pytest
 ```
+
+The test suite includes:
+- **Unit Tests**: Services and Models.
+- **Integration Tests**: API Client and Database.
+- **UI Regression Tests**: Component logic, Dialogs, and Data Serialization.
 
 **With Podman:**
 ```bash

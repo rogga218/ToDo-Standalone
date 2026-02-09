@@ -120,10 +120,12 @@ try:
 
     @app.on_shutdown
     def on_shutdown():
-        logger.info("Shutting down Application...")
-        shutdown_cleanup()
-        # Force exit to ensure no lingering threads keep the process alive
-        os._exit(0)
+        # Only cleanup if running as an executable
+        if getattr(sys, "frozen", False):
+            logger.info("Shutting down Application...")
+            shutdown_cleanup()
+            # Force exit to ensure no lingering threads keep the process alive
+            os._exit(0)
 
     # -- UI Logic --
 
@@ -182,10 +184,12 @@ try:
     # Only run the app if this is the main process
     if __name__ in {"__main__", "__mp_main__"}:
         ui.run(**args)
-        ui.run(**args)
+
         # Ensure process terminates after UI closes
-        shutdown_cleanup()
-        os._exit(0)
+        if getattr(sys, "frozen", False):
+            shutdown_cleanup()
+            os._exit(0)
+
 
 except BaseException as e:
     # Catch SystemExit and others to ensure we see what happened
