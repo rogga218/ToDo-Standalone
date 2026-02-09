@@ -25,38 +25,38 @@ This project has been refactored to specificially focus on a single, native Pyth
 
 ```
 ├── src/
-│   ├── main.py            # Entry point
-│   ├── config.py          # Configuration
-│   ├── database.py        # Database setup
-│   ├── models.py          # Data models
-│   ├── seed_data.py       # Test data generator
-│   ├── services/          # Business logic (Person, Todo, AI)
-│   ├── routers/           # FastAPI routers
-│   └── ui/                # Frontend components and pages
-│       ├── controller.py  # UI Controller (Logic & State)
-│       ├── layout.py      # Main layout wrapper
-│       ├── theme.py       # Theme management
-│       ├── translations.py# Localization (EN/SV)
-│       ├── api_client.py  # Internal API Client
-│       ├── components/    # Reusable UI components (Dialogs, etc.)
-│       └── pages/         # Page content (Board, History)
-├── tests/                 # Automated tests
-│   ├── conftest.py        # Fixtures & Reporting
-│   ├── test_services.py   # Basic Unit tests
-│   ├── test_person_service.py # Person CRUD tests
-│   ├── test_todo_service_extended.py # Advanced Todo tests
-│   ├── test_ai_service_mock.py # AI Mock tests
-│   ├── test_api_client.py # Integration tests
-│   ├── test_validation.py # Data Model Validation tests
-│   ├── test_ui_history_serialization.py # UI Serialization tests
-│   ├── test_ui_dialogs.py # UI Dialog tests
-│   └── test_ui_controller.py # UI Controller tests
-├── Dockerfile             # Container definition
-├── docker-compose.yml     # Orchestration
-├── requirements.txt       # Dependencies
-├── build.py               # Build script (PyInstaller)
-├── generate_secret.py     # Secret generator utility
-└── .env                   # Configuration file
+│   ├── main.py                           # Entry point
+│   ├── config.py                         # Configuration
+│   ├── database.py                       # Database setup
+│   ├── models.py                         # Data models
+│   ├── seed_data.py                      # Test data generator
+│   ├── services/                         # Business logic (Person, Todo, AI)
+│   ├── routers/                          # FastAPI routers
+│   └── ui/                               # Frontend components and pages
+│       ├── controller.py                 # UI Controller (Logic & State)
+│       ├── layout.py                     # Main layout wrapper
+│       ├── theme.py                      # Theme management
+│       ├── translations.py               # Localization (EN/SV)
+│       ├── api_client.py                 # Internal API Client
+│       ├── components/                   # Reusable UI components (Dialogs, etc.)
+│       └── pages/                        # Page content (Board, History)
+├── tests/                                # Automated tests
+│   ├── conftest.py                       # Fixtures & Reporting
+│   ├── test_services.py                  # Basic Unit tests
+│   ├── test_person_service.py            # Person CRUD tests
+│   ├── test_todo_service_extended.py     # Advanced Todo tests
+│   ├── test_ai_service_mock.py           # AI Mock tests
+│   ├── test_api_client.py                # Integration tests
+│   ├── test_validation.py                # Data Model Validation tests
+│   ├── test_ui_history_serialization.py  # UI Serialization tests
+│   ├── test_ui_dialogs.py                # UI Dialog tests
+│   └── test_ui_controller.py             # UI Controller tests
+├── Dockerfile                            # Container definition
+├── docker-compose.yml                    # Orchestration
+├── requirements.txt                      # Dependencies
+├── build.py                              # Build script (PyInstaller)
+├── generate_secret.py                    # Secret generator utility
+└── .env                                  # Configuration file
 ```
 
 ## Getting Started
