@@ -146,7 +146,9 @@ try:
             await controller.render_layout("board", page)
         except Exception as e:
             logger.error(f"Error loading board page: {e}")
-            ui.label(f"Error loading page: {e}").classes("text-red-500")
+            ui.label(f"Ett fel uppstod vid laddning av sidan: {e}").classes(
+                "text-red-500"
+            )
 
     @ui.page("/history")
     async def history_page():
@@ -157,7 +159,9 @@ try:
             await controller.render_layout("history")
         except Exception as e:
             logger.error(f"Error loading history page: {e}")
-            ui.label(f"Error loading page: {e}").classes("text-red-500")
+            ui.label(f"Ett fel uppstod vid laddning av sidan: {e}").classes(
+                "text-red-500"
+            )
 
     settings = get_settings()
     app.add_static_files("/assets", settings.get_assets_path())

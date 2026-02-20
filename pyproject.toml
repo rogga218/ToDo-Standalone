@@ -3,4 +3,4 @@ pythonpath = ["."]
 asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
-addopts = "-v"
+addopts = "-v --cov=src --cov-fail-under=55 --cov-report=term-missing"

@@ -12,9 +12,7 @@ def test_person_name_min_length():
     with pytest.raises(ValidationError) as excinfo:
         PersonCreate(name="a")
     # Pydantic validation errors contain details, we just check it raised
-    assert "least 2 characters" in str(excinfo.value) or "min_length" in str(
-        excinfo.value
-    )
+    assert "minst 2 tecken" in str(excinfo.value) or "min_length" in str(excinfo.value)
 
 
 def test_person_name_max_length():

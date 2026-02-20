@@ -73,3 +73,6 @@ Desktop.ini
 *.db
 testreport/
 todo.db
+
+# Temp Scratchpad
+temp/

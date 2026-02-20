@@ -1,9 +1,14 @@
 import pytest
-import pytest_asyncio
 from sqlmodel import SQLModel, Session, create_engine
+from sqlalchemy.pool import StaticPool
 from typing import Generator
 import os
 from datetime import datetime
+from fastapi.testclient import TestClient
+from fastapi import FastAPI
+from src.routers import persons, todos, ai
+from src.database import get_session
+import src.models  # noqa: F401  # Required for SQLModel metadata to register the tables
 
 # Use an in-memory SQLite database for tests
 TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -11,19 +16,31 @@ TEST_DATABASE_URL = "sqlite:///:memory:"
 
 @pytest.fixture(name="session")
 def session_fixture() -> Generator[Session, None, None]:
-    engine = create_engine(TEST_DATABASE_URL, connect_args={"check_same_thread": False})
+    engine = create_engine(
+        TEST_DATABASE_URL,
+        connect_args={"check_same_thread": False},
+        poolclass=StaticPool,
+    )
     SQLModel.metadata.create_all(engine)
     with Session(engine) as session:
         yield session
     SQLModel.metadata.drop_all(engine)
+    engine.dispose()
 
 
-@pytest_asyncio.fixture(loop_scope="function")
-async def async_client():
-    # Since we don't have a full FastAPI app running in tests usually,
-    # we might test services directly or use TestClient if we had a factory.
-    # For this standalone app, we mainly test services and the ApiClient wrapper.
-    pass
+@pytest.fixture(name="client")
+def client_fixture(session: Session) -> Generator[TestClient, None, None]:
+    test_app = FastAPI()
+    test_app.include_router(persons.router)
+    test_app.include_router(todos.router)
+    test_app.include_router(ai.router)
+
+    def get_session_override():
+        return session
+
+    test_app.dependency_overrides[get_session] = get_session_override
+    with TestClient(test_app) as c:
+        yield c
 
 
 def pytest_terminal_summary(terminalreporter, exitstatus, config):
@@ -38,7 +55,7 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
     # We'll write to the current directory.
 
     try:
-        with open(report_file, "w") as f:
+        with open(report_file, "w", encoding="utf-8") as f:
             f.write(f"Test Report - {timestamp}\n")
             f.write("=" * 30 + "\n")
             f.write(f"Exit Status: {exitstatus}\n")
@@ -83,6 +100,21 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
                     # Optionally add location if available
                     if hasattr(warning, "fslocation"):
                         f.write(f"  Location: {warning.fslocation}\n")
+
+            # Try to append the coverage report
+            try:
+                from coverage import Coverage
+                import io
+
+                cov = Coverage()
+                cov.load()
+                cov_out = io.StringIO()
+                cov.report(file=cov_out)
+                f.write("\nCoverage Report:\n")
+                f.write("=" * 30 + "\n")
+                f.write(cov_out.getvalue())
+            except Exception:
+                pass  # Coverage might fail or not be installed, ignore silently
 
         print(f"\nTest report generated: {report_file}")
     except Exception as e:

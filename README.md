@@ -24,39 +24,61 @@ This project has been refactored to specificially focus on a single, native Pyth
 ## Project Structure
 
 ```
+├── .env                                  # Configuration file
+├── .env.example                          # Configuration template
+├── .gitignore                            # Git ignore file
+├── build.py                              # Build script (PyInstaller)
+├── docker-compose.yml                    # Orchestration
+├── Dockerfile                            # Container definition
+├── README.md                             # Project documentation
+├── pyproject.toml                        # Project configuration
+├── requirements.txt                      # Dependencies
+├── scripts/                              # Utility scripts
+│   └── generate_secret.py                # Secret generator utility
 ├── src/
-│   ├── main.py                           # Entry point
+│   ├── assets/                           # Static assets
+│   │   ├── logo.ico                      # Windows icon
+│   │   └── logo.svg                      # Scalable logo
+│   ├── backend_app.py                    # Backend application
 │   ├── config.py                         # Configuration
 │   ├── database.py                       # Database setup
+│   ├── main.py                           # Entry point
 │   ├── models.py                         # Data models
-│   ├── seed_data.py                      # Test data generator
-│   ├── services/                         # Business logic (Person, Todo, AI)
 │   ├── routers/                          # FastAPI routers
+│   │   ├── __init__.py                   # Package initialization
+│   │   ├── ai.py                         # AI endpoints
+│   │   ├── persons.py                    # Person endpoints
+│   │   └── todos.py                      # Todo endpoints
+│   ├── seed_data.py                      # Test data generator
+│   ├── services/                         # Business logic
+│   │   ├── ai_service.py                 # AI service
+│   │   ├── person_service.py             # Person service
+│   │   └── todo_service.py               # Todo service
 │   └── ui/                               # Frontend components and pages
+│       ├── api_client.py                 # Internal API Client
+│       ├── components/                   # Reusable UI components
+│       │   └── dialogs.py                # UI Dialogs
 │       ├── controller.py                 # UI Controller (Logic & State)
 │       ├── layout.py                     # Main layout wrapper
+│       ├── pages/                        # Page content
+│       │   ├── board.py                  # Board page
+│       │   └── history.py                # History page
 │       ├── theme.py                      # Theme management
-│       ├── translations.py               # Localization (EN/SV)
-│       ├── api_client.py                 # Internal API Client
-│       ├── components/                   # Reusable UI components (Dialogs, etc.)
-│       └── pages/                        # Page content (Board, History)
-├── tests/                                # Automated tests
-│   ├── conftest.py                       # Fixtures & Reporting
-│   ├── test_services.py                  # Basic Unit tests
-│   ├── test_person_service.py            # Person CRUD tests
-│   ├── test_todo_service_extended.py     # Advanced Todo tests
-│   ├── test_ai_service_mock.py           # AI Mock tests
-│   ├── test_api_client.py                # Integration tests
-│   ├── test_validation.py                # Data Model Validation tests
-│   ├── test_ui_history_serialization.py  # UI Serialization tests
-│   ├── test_ui_dialogs.py                # UI Dialog tests
-│   └── test_ui_controller.py             # UI Controller tests
-├── Dockerfile                            # Container definition
-├── docker-compose.yml                    # Orchestration
-├── requirements.txt                      # Dependencies
-├── build.py                              # Build script (PyInstaller)
-├── generate_secret.py                    # Secret generator utility
-└── .env                                  # Configuration file
+│       └── translations.py               # Localization (EN/SV)
+└── tests/                                # Automated tests
+    ├── conftest.py                       # Fixtures & Reporting
+    ├── test_ai_service_mock.py           # AI Mock tests
+    ├── test_api_client.py                # Integration tests
+    ├── test_core_utils.py                # App Initialization & Config tests
+    ├── test_person_service.py            # Person CRUD tests
+    ├── test_routers.py                   # API router integration tests
+    ├── test_seed_data.py                 # DB mock data generation tests
+    ├── test_services.py                  # Basic Unit tests
+    ├── test_todo_service_extended.py     # Advanced Todo tests
+    ├── test_ui_controller.py             # UI Controller tests
+    ├── test_ui_dialogs.py                # UI Dialog tests
+    ├── test_ui_history_serialization.py  # UI Serialization tests
+    └── test_validation.py                # Data Model Validation tests
 ```
 
 ## Getting Started
@@ -97,7 +119,7 @@ Create a `.env` file in the root directory (use `.env.example` as a template).
 | `STORAGE_SECRET` | Secret for session encryption | `random_secret_for_session_encryption` |
 | `PORT` | Local dev port | `8080` |
 
-> **Tip:** To generate a secure `STORAGE_SECRET`, run `python generate_secret.py` and copy the output.
+> **Tip:** To generate a secure `STORAGE_SECRET`, run `python scripts/generate_secret.py` and copy the output.
 
 ## Running the App
 
@@ -129,6 +151,18 @@ Build and start the container:
 podman-compose up --build -d
 ```
 
+### Docker/Podman Cleanup
+
+To clean up stopped containers, unused networks, and dangling images:
+```bash
+podman system prune
+```
+
+To completely remove the app's containers, networks, volumes, and images:
+```bash
+podman-compose down --rmi all -v
+```
+
 ## Testing & Data
 
 This section covers how to run automated tests and seed the database with test data.
@@ -145,9 +179,9 @@ pytest
 ```
 
 The test suite includes:
-- **Unit Tests**: Services and Models.
-- **Integration Tests**: API Client and Database.
-- **UI Regression Tests**: Component logic, Dialogs, and Data Serialization.
+- **Unit Tests**: Services, Models, API Client (Mocked), UI Controller (Mocked), and Core Utilities.
+- **Integration Tests**: FastAPI endpoint edge cases and routing against an in-memory database.
+- **Coverage Enforcement**: The test suite mandates strict code coverage testing (`pytest-cov > 55%`).
 
 **With Podman:**
 ```bash
@@ -169,7 +203,7 @@ python -m src.seed_data
 podman-compose run --rm app python -m src.seed_data
 ```
 
-## Quick Links
+## Quick Links (when running as a Container in Podman or Docker)
 
 -   **App**: [http://localhost:8080](http://localhost:8080)
 -   **API JSON**: [http://localhost:8080/openapi.json](http://localhost:8080/openapi.json)

@@ -39,14 +39,14 @@ class PersonCreate(PersonBase):
     @field_validator("name", mode="before")
     def validate_name_clean(cls, v):
         if not isinstance(v, str):
-            raise ValueError("Name must be a string")
+            raise ValueError("Namnet måste vara en textsträng")
 
         # 1. Strip whitespace
         v = v.strip()
 
         # 2. Length check (minimum 2 chars)
         if len(v) < 2:
-            raise ValueError("Name must be at least 2 characters long")
+            raise ValueError("Namnet måste vara minst 2 tecken långt")
 
         # 3. Whitelist check (Strict)
         # Allows: Letters, Spaces, Hyphens, Apostrophes.
@@ -58,7 +58,7 @@ class PersonCreate(PersonBase):
 
         if not re.match(pattern, v):
             raise ValueError(
-                "Name contains invalid characters (Allowed: letters, spaces, hyphens, apostrophes)"
+                "Namnet innehåller ogiltiga tecken (Tillåtna: bokstäver, mellanslag, bindestreck, apostrofer)"
             )
 
         return v
@@ -127,13 +127,13 @@ class TodoCreate(TodoBase):
     @field_validator("title", mode="before")
     def validate_title_type(cls, v):
         if not isinstance(v, str):
-            raise ValueError("Title must be a string")
+            raise ValueError("Titeln måste vara en textsträng")
         return v
 
     @field_validator("deadline", mode="before")
     def validate_deadline_type(cls, v):
         if v is not None and not isinstance(v, (str, date)):
-            raise ValueError("Deadline must be a string or date")
+            raise ValueError("Deadline måste vara en textsträng eller ett datum")
         return v
 
 
@@ -158,11 +158,11 @@ class TodoUpdate(SQLModel):
     def validate_deadline_type(cls, v):
         # v can be None here if strictly passing null, but we'll filter it out later
         if v is not None and not isinstance(v, (str, date)):
-            raise ValueError("Deadline must be a string or date")
+            raise ValueError("Deadline måste vara en textsträng eller ett datum")
         return v
 
     @field_validator("priority")
     def validate_priority(cls, v):
         if v is not None and (v < 1 or v > 3):
-            raise ValueError("Priority must be between 1 and 3")
+            raise ValueError("Prioritet måste vara mellan 1 och 3")
         return v
