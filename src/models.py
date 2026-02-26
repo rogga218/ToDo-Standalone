@@ -39,14 +39,14 @@ class PersonCreate(PersonBase):
     @field_validator("name", mode="before")
     def validate_name_clean(cls, v):
         if not isinstance(v, str):
-            raise ValueError("Namnet måste vara en textsträng")
+            raise ValueError("invalid_name_type")
 
         # 1. Strip whitespace
         v = v.strip()
 
         # 2. Length check (minimum 2 chars)
         if len(v) < 2:
-            raise ValueError("Namnet måste vara minst 2 tecken långt")
+            raise ValueError("name_too_short")
 
         # 3. Whitelist check (Strict)
         # Allows: Letters, Spaces, Hyphens, Apostrophes.
@@ -57,9 +57,7 @@ class PersonCreate(PersonBase):
         pattern = r"^[a-zA-Z\u00C0-\u00FF][a-zA-Z\u00C0-\u00FF \-\']+$"
 
         if not re.match(pattern, v):
-            raise ValueError(
-                "Namnet innehåller ogiltiga tecken (Tillåtna: bokstäver, mellanslag, bindestreck, apostrofer)"
-            )
+            raise ValueError("invalid_name_chars")
 
         return v
 

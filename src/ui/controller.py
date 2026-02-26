@@ -8,6 +8,7 @@ from src.ui.components.dialogs import PersonDialog, TodoDialog
 from src.ui.pages.board import BoardView
 from src.ui.pages.history import HistoryView
 from src.ui.layout import Layout
+from src.ui.translations import get_text
 
 
 class ToDoController:
@@ -17,6 +18,12 @@ class ToDoController:
         self.content_container = None
         self.layout_component = None
         self.language = "sv"
+
+    def t(self, key: str, *args) -> str:
+        text = get_text(key, self.language)
+        if args:
+            return text.format(*args)
+        return text
 
     async def initialize(self):
         """Initial data fetch."""
@@ -138,7 +145,7 @@ class ToDoController:
                 payload = todo.model_dump()
                 res = await api.update_todo(payload)
                 if res["success"]:
-                    ui.notify("Uppdaterad", type="positive")
+                    ui.notify(self.t("updated"), type="positive")
                     await self.refresh()
                 else:
                     ui.notify(res["error"], type="negative")
@@ -160,7 +167,7 @@ class ToDoController:
             async def on_delete(todo: TodoRead):
                 res = await api.delete_todo(str(todo.id))
                 if res["success"]:
-                    ui.notify("Borttagen", type="positive")
+                    ui.notify(self.t("task_deleted"), type="positive")
                     await self.refresh()
                 else:
                     ui.notify(res["error"], type="negative")
@@ -173,25 +180,25 @@ class ToDoController:
                 payload["completed"] = False
                 res = await api.update_todo(payload)
                 if res["success"]:
-                    ui.notify("Uppdaterad", type="positive")
+                    ui.notify(self.t("updated"), type="positive")
                     await self.refresh()
                 else:
                     ui.notify(res["error"], type="negative")
 
             async def on_generate_subtasks(todo: TodoRead):
-                ui.notify("Genererar...", type="info")
+                ui.notify(self.t("generating"), type="info")
                 res = await api.generate_subtasks(str(todo.id))
                 if res["success"]:
-                    ui.notify("Klar!", type="positive")
+                    ui.notify(self.t("done_excl"), type="positive")
                     await self.refresh()
                 else:
                     ui.notify(res["error"], type="negative")
 
             async def on_bulk_delete(todos: List[TodoRead]):
-                ui.notify(f"Raderar {len(todos)} uppgifter...", type="info")
+                ui.notify(self.t("deleting_n_tasks", len(todos)), type="info")
                 for todo in todos:
                     await api.delete_todo(str(todo.id))
-                ui.notify("Klar!", type="positive")
+                ui.notify(self.t("done_excl"), type="positive")
                 await self.refresh()
 
             # Render Specific View

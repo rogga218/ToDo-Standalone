@@ -61,6 +61,83 @@ def test_generate_subtasks_no_api_key(session: Session):
         assert excinfo.value.status_code == 500
 
 
+def test_generate_subtasks_empty_response(session: Session):
+    """Test when Gemini returns an empty response text."""
+    from src.models import Todo
+
+    mock_todo = Todo(title="Test", description="Test", person_id=uuid.uuid4())
+
+    with patch.object(session, "get", return_value=mock_todo):
+        mock_client_instance = MagicMock()
+        mock_response = MagicMock()
+        mock_response.text = ""  # Empty
+        mock_client_instance.models.generate_content.return_value = mock_response
+
+        with patch("src.services.ai_service.get_settings") as mock_settings:
+            mock_settings.return_value.GEMINI_API_KEY = "dummy-key"
+            with patch("google.genai.Client", return_value=mock_client_instance):
+                with pytest.raises(HTTPException) as excinfo:
+                    from src.services.ai_service import generate_subtasks
+
+                    generate_subtasks(session, uuid.uuid4())
+
+                assert excinfo.value.status_code == 500
+                assert "Empty response from AI" in excinfo.value.detail
+
+
+def test_generate_subtasks_invalid_json(session: Session):
+    """Test when Gemini returns text that cannot be parsed as JSON."""
+    from src.models import Todo
+
+    mock_todo = Todo(title="Test", description="Test", person_id=uuid.uuid4())
+
+    with patch.object(session, "get", return_value=mock_todo):
+        mock_client_instance = MagicMock()
+        mock_response = MagicMock()
+        mock_response.text = "This is not JSON data, just plain text"
+        mock_client_instance.models.generate_content.return_value = mock_response
+
+        with patch("src.services.ai_service.get_settings") as mock_settings:
+            mock_settings.return_value.GEMINI_API_KEY = "dummy-key"
+            with patch("google.genai.Client", return_value=mock_client_instance):
+                with pytest.raises(HTTPException) as excinfo:
+                    from src.services.ai_service import generate_subtasks
+
+                    generate_subtasks(session, uuid.uuid4())
+
+                assert excinfo.value.status_code == 500
+                assert "AI Generation Failed" in excinfo.value.detail
+
+
+def test_generate_subtasks_refresh_fails(session: Session):
+    """Test the edge case where the Todo cannot be found after it was updated."""
+    from src.models import Todo
+
+    mock_todo = Todo(title="Test", description="Test", person_id=uuid.uuid4())
+
+    with patch.object(session, "get", return_value=mock_todo):
+        mock_client_instance = MagicMock()
+        mock_response = MagicMock()
+        mock_response.text = '["Subtask 1"]'
+        mock_client_instance.models.generate_content.return_value = mock_response
+
+        # Force the refresh query (exec().first()) to return None
+        mock_exec_result = MagicMock()
+        mock_exec_result.first.return_value = None
+
+        with patch.object(session, "exec", return_value=mock_exec_result):
+            with patch("src.services.ai_service.get_settings") as mock_settings:
+                mock_settings.return_value.GEMINI_API_KEY = "dummy-key"
+                with patch("google.genai.Client", return_value=mock_client_instance):
+                    with pytest.raises(HTTPException) as excinfo:
+                        from src.services.ai_service import generate_subtasks
+
+                        generate_subtasks(session, uuid.uuid4())
+
+                    assert excinfo.value.status_code == 500
+                    assert "Todo not found after update" in excinfo.value.detail
+
+
 def test_generate_subtasks_todo_not_found(session: Session):
     with patch("src.services.ai_service.get_settings") as mock_settings:
         mock_settings.return_value.GEMINI_API_KEY = "TEST_KEY"

@@ -9,6 +9,7 @@ This project has been refactored to specificially focus on a single, native Pyth
 -   **Native Python UI**: Built with [NiceGUI](https://nicegui.io).
 -   **Integrated Backend**: Business logic runs directly within the application (no internal HTTP requests).
 -   **SQLite Database**: Simple, file-based database for easy deployment.
+-   **Localization**: Built-in support for multiple languages (English and Swedish).
 -   **AI Subtasks**: Auto-generate subtasks using Google Gemini.
 -   **Responsive Design**: Works on Desktop and Mobile.
 -   **Dark Mode**: Enabled by default.
@@ -41,6 +42,9 @@ This project has been refactored to specificially focus on a single, native Pyth
 │   │   └── logo.svg                      # Scalable logo
 │   ├── backend_app.py                    # Backend application
 │   ├── config.py                         # Configuration
+│   ├── core/                             # Core application utilities
+│   │   ├── errors.py                     # Fatal error handling
+│   │   └── process.py                    # Process & shutdown management
 │   ├── database.py                       # Database setup
 │   ├── main.py                           # Entry point
 │   ├── models.py                         # Data models
@@ -63,12 +67,14 @@ This project has been refactored to specificially focus on a single, native Pyth
 │       ├── pages/                        # Page content
 │       │   ├── board.py                  # Board page
 │       │   └── history.py                # History page
+│       ├── routes.py                     # UI Page definitions
 │       ├── theme.py                      # Theme management
 │       └── translations.py               # Localization (EN/SV)
 └── tests/                                # Automated tests
     ├── conftest.py                       # Fixtures & Reporting
     ├── test_ai_service_mock.py           # AI Mock tests
     ├── test_api_client.py                # Integration tests
+    ├── test_core.py                      # Core utilities & process tests
     ├── test_core_utils.py                # App Initialization & Config tests
     ├── test_person_service.py            # Person CRUD tests
     ├── test_routers.py                   # API router integration tests
@@ -164,7 +170,7 @@ This section covers how to run automated tests and seed the database with test d
 The test suite includes:
 - **Unit Tests**: Services, Models, API Client (Mocked), UI Controller (Mocked), and Core Utilities.
 - **Integration Tests**: FastAPI endpoint edge cases and routing against an in-memory database.
-- **Coverage Enforcement**: The test suite mandates strict code coverage testing (`pytest-cov > 55%`).
+- **Coverage Enforcement**: The test suite mandates strict code coverage testing (`pytest-cov > 68%`).
 *A timestamped test report is generated in `tests/testreport/` after each run.*
 
 To run the automated test suite using `pytest`:

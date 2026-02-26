@@ -41,6 +41,18 @@ def test_person_routes(client):
     assert del_res.status_code == 400
 
 
+def test_person_routes_exceptions(client):
+    with patch("src.routers.persons.person_service.create_person") as mock_create:
+        mock_create.side_effect = Exception("DB failure")
+        response = client.post("/persons/", json={"name": "Fail"})
+        assert response.status_code == 500
+
+    with patch("src.routers.persons.person_service.delete_person") as mock_delete:
+        mock_delete.side_effect = Exception("DB failure")
+        response = client.delete("/persons/00000000-0000-0000-0000-000000000000")
+        assert response.status_code == 500
+
+
 def test_todo_routes(client):
     # Setup Person
     p_res = client.post("/persons/", json={"name": "Todo Owner"})

@@ -130,3 +130,10 @@ async def test_api_client_exception_handling(mock_run_db, client):
 
     res2 = await client.update_todo({"id": str(uuid.uuid4())})
     assert res2["success"] is False
+
+    assert (await client.delete_person(str(uuid.uuid4())))["success"] is False
+    assert (await client.create_todo({}))["success"] is False
+    assert (await client.delete_todo(str(uuid.uuid4())))["success"] is False
+    assert (await client.generate_subtasks(str(uuid.uuid4())))["success"] is False
+    assert (await client.toggle_subtask(str(uuid.uuid4()), True))["success"] is False
+    assert (await client.delete_subtask(str(uuid.uuid4())))["success"] is False

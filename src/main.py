@@ -1,44 +1,11 @@
 import sys
 import os
 
+from src.core.process import init_crash_logging, shutdown_cleanup
+from src.core.errors import handle_fatal_error
+
 # Polyfill for PyInstaller --windowed mode where sys.stdout/stderr are None
-# This prevents Uvicorn logging from crashing on 'isatty' checks.
-if getattr(sys, "frozen", False):
-    if sys.stdout is None:
-        sys.stdout = open(os.devnull, "w")
-    if sys.stderr is None:
-        sys.stderr = open(os.devnull, "w")
-
-
-# Crash Logger
-def log_crash(e):
-    try:
-        # Write to app directory (dist/ when frozen)
-        if getattr(sys, "frozen", False):
-            base_path = os.path.dirname(sys.executable)
-        else:
-            base_path = os.path.dirname(os.path.abspath(__file__))
-
-        log_path = os.path.join(base_path, "crash.log")
-
-        with open(log_path, "w") as f:
-            import traceback
-
-            traceback.print_exc(file=f)
-            f.write(f"\nError: {e}")
-
-        print(f"Crash log saved to: {log_path}")
-    except Exception as log_err:
-        print(f"Failed to write crash log: {log_err}")
-
-    # Always print to console and pause
-    print("CRITICAL ERROR: Application failed to start.")
-    import traceback
-
-    traceback.print_exc()
-    print("\nPress Enter to close this window...")
-    input()
-
+init_crash_logging()
 
 try:
     # 1. Critical for PyInstaller on Windows to prevent infinite process spawning
@@ -53,12 +20,11 @@ try:
     from src.routers import persons, todos, ai
     from src.models import Person
     from src.config import get_settings, logger
-    from src.ui.controller import ToDoController
-    from src.ui.theme import inject_dark_mode_script
     from sqlmodel import Session, select
 
-    # --- Backend Setup ---
+    from src.ui.routes import setup_routes
 
+    # --- Backend Setup ---
     # Include Routers (API)
     app.include_router(persons.router)
     app.include_router(todos.router)
@@ -84,84 +50,17 @@ try:
         create_db_and_tables()
         create_default_persons()
 
-    def shutdown_cleanup():
-        """
-        Kill all child processes to ensure no hanging processes after exit.
-        """
-        import psutil  # type: ignore
-
-        try:
-            logger.info("Performing shutdown cleanup...")
-            current_process = psutil.Process()
-            children = current_process.children(recursive=True)
-
-            for child in children:
-                try:
-                    logger.info(
-                        f"Terminating child process: {child.pid} ({child.name()})"
-                    )
-                    child.terminate()
-                except psutil.NoSuchProcess:
-                    pass
-
-            # Wait for termination
-            _, alive = psutil.wait_procs(children, timeout=3)
-
-            for p in alive:
-                try:
-                    logger.warning(f"Killing stubborn process: {p.pid} ({p.name()})")
-                    p.kill()
-                except psutil.NoSuchProcess:
-                    pass
-
-            logger.info("Cleanup complete.")
-        except Exception as e:
-            logger.error(f"Error during shutdown cleanup: {e}")
-
     @app.on_shutdown
     def on_shutdown():
         # Only cleanup if running as an executable
         if getattr(sys, "frozen", False):
             logger.info("Shutting down Application...")
-            shutdown_cleanup()
+            shutdown_cleanup(logger)
             # Force exit to ensure no lingering threads keep the process alive
             os._exit(0)
 
     # -- UI Logic --
-
-    @ui.page("/")
-    def index():
-        inject_dark_mode_script()
-        ui.navigate.to("/board")
-
-    @ui.page("/board")
-    async def board_page(page: int = 0):
-        try:
-            inject_dark_mode_script()
-            # Initialize data if empty (first load) or just refresh?
-            # Ideally controller manages its life cycle.
-            # We call initialize to ensure data is fresh on page load.
-            controller = ToDoController()
-            await controller.initialize()
-            await controller.render_layout("board", page)
-        except Exception as e:
-            logger.error(f"Error loading board page: {e}")
-            ui.label(f"Ett fel uppstod vid laddning av sidan: {e}").classes(
-                "text-red-500"
-            )
-
-    @ui.page("/history")
-    async def history_page():
-        try:
-            inject_dark_mode_script()
-            controller = ToDoController()
-            await controller.initialize()
-            await controller.render_layout("history")
-        except Exception as e:
-            logger.error(f"Error loading history page: {e}")
-            ui.label(f"Ett fel uppstod vid laddning av sidan: {e}").classes(
-                "text-red-500"
-            )
+    setup_routes()
 
     settings = get_settings()
     app.add_static_files("/assets", settings.get_assets_path())
@@ -191,39 +90,9 @@ try:
 
         # Ensure process terminates after UI closes
         if getattr(sys, "frozen", False):
-            shutdown_cleanup()
+            shutdown_cleanup(logger)
             os._exit(0)
 
 
 except BaseException as e:
-    # Catch SystemExit and others to ensure we see what happened
-    if isinstance(e, SystemExit) and e.code == 0:
-        # Normal exit, don't log as crash
-        sys.exit(0)
-
-    log_crash(e)
-
-    # In windowed mode (frozen), show a popup box because there starts no console
-    if getattr(sys, "frozen", False):
-        try:
-            import ctypes
-
-            ctypes.windll.user32.MessageBoxW(
-                0,
-                f"Critical Error:\n{e}\n\nSee crash.log for details.",
-                "ToDo App Failure",
-                0x10 | 0x1000,  # MB_ICONHAND | MB_SYSTEMMODAL (force to top)
-            )
-        except Exception:
-            pass
-    else:
-        print(f"CRITICAL ERROR: {e}")
-        import traceback
-
-        traceback.print_exc()
-        # Only pause if not running in IDE/Service
-        if sys.stdin and sys.stdin.isatty():
-            print("\nPress Enter to close this window...")
-            input()
-
-    sys.exit(1)
+    handle_fatal_error(e)

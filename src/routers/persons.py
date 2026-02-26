@@ -33,7 +33,6 @@ def create_person(person: PersonCreate, session: Session = Depends(get_session))
 @router.get("/", response_model=List[PersonRead])
 def read_persons(request: Request, session: Session = Depends(get_session)):
     """Hämta alla personer"""
-    # Validation of query params logic kept
     if request.query_params:
         raise HTTPException(
             status_code=422,

@@ -52,7 +52,22 @@ class PersonDialog:
                         await self.refresh_list()  # Refresh Local List
                         await self.on_success()  # Refresh Background App
                     else:
-                        ui.notify(res["error"], type="negative")
+                        err = str(res["error"])
+                        if (
+                            "Value error, " in err
+                        ):  # Pydantic V2 prefixes custom errors with "Value error, "
+                            err = err.replace("Value error, ", "")
+
+                        # Split by newline (if multiple errors) and translate each
+                        err = "\n".join(
+                            self.t(line.strip()) for line in err.split("\n")
+                        )
+
+                        # Fallback for generic untranslated exceptions
+                        if "Person already exists" in err:
+                            err = self.t("person_exists")
+
+                        ui.notify(err, type="negative")
 
                 ui.button(icon="add", on_click=lambda e: create_new()).props(
                     "round flat color=green"
@@ -104,19 +119,22 @@ class PersonDialog:
                         "cursor-not-allowed"
                     )
                 else:
-                    # Active delete button
-                    async def delete_p(pid=p.id):
-                        res = await api.delete_person(str(pid))
-                        if res["success"]:
-                            ui.notify("Person borttagen", type="positive")
-                            await self.refresh_list()
-                            await self.on_success()
-                        else:
-                            ui.notify(res["error"], type="negative")
+
+                    def create_delete_handler(person_id):
+                        async def delete_handler(*_):
+                            res = await api.delete_person(str(person_id))
+                            if res["success"]:
+                                ui.notify(self.t("person_deleted"), type="positive")
+                                await self.refresh_list()
+                                await self.on_success()
+                            else:
+                                ui.notify(res["error"], type="negative")
+
+                        return delete_handler
 
                     ui.button(
                         icon="delete",
-                        on_click=lambda e: delete_p(p.id),
+                        on_click=create_delete_handler(p.id),
                     ).props("flat round dense color=red")
 
 
@@ -206,6 +224,11 @@ class TodoDialog:
             async def save():
                 if not title_input.value or not person_select.value:
                     ui.notify(self.t("title_person_required"), type="negative")
+                    return
+
+                desc_val = (desc_input.value or "").strip()
+                if not desc_val:
+                    ui.notify(self.t("desc_required"), type="negative")
                     return
 
                 payload = {

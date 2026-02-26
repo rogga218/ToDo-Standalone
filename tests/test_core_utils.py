@@ -40,6 +40,19 @@ def test_config_frozen_assets():
         assert assets_path.endswith("assets")
 
 
+def test_config_frozen_env_fallback():
+    # Simulate being frozen but the primary .env is missing.
+    with (
+        patch("sys.frozen", True, create=True),
+        patch("os.path.exists", return_value=False),
+        patch("os.path.join") as mock_join,
+    ):
+        settings = Settings()
+        assert settings.get_db_url() is not None
+        # It should have called os.path.join to find the fallback
+        mock_join.assert_called()
+
+
 # -----------------
 # 2. Database Tests
 # -----------------

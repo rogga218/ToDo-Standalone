@@ -26,7 +26,10 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "existing_persons": "Befintliga Personer:",
         "name_required": "Namn krävs",
         "name_too_short": "Namnet måste vara minst 2 tecken",
+        "invalid_name_type": "Namnet måste vara en textsträng",
+        "invalid_name_chars": "Namnet innehåller ogiltiga tecken (Tillåtna: bokstäver, mellanslag, bindestreck, apostrofer)",
         "person_created": "Person skapad!",
+        "person_exists": "Personen finns redan",
         "save": "Spara",
         # Dialogs - Todo
         "dialog_new_todo": "Ny Uppgift",
@@ -37,6 +40,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "title_person_required": "Titel och Person krävs",
         "updated": "Uppdaterad",
         "task_created": "Uppgift skapad!",
+        "task_deleted": "Borttagen",
+        "desc_required": "Beskrivning krävs",
+        "generating": "Genererar...",
+        "done_excl": "Klar!",
+        "deleting_n_tasks": "Raderar {} uppgifter...",
+        "person_deleted": "Person borttagen",
         # Common Errors
         "error_generic": "Ett fel uppstod",
         # Board
@@ -90,7 +99,10 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "existing_persons": "Existing Persons:",
         "name_required": "Name is required",
         "name_too_short": "Name must be at least 2 characters",
+        "invalid_name_type": "Name must be a string",
+        "invalid_name_chars": "Name contains invalid characters (Allowed: letters, spaces, hyphens, apostrophes)",
         "person_created": "Person created!",
+        "person_exists": "Person already exists",
         "save": "Save",
         # Dialogs - Todo
         "dialog_new_todo": "New Task",
@@ -101,6 +113,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "title_person_required": "Title and Person are required",
         "updated": "Updated",
         "task_created": "Task created!",
+        "task_deleted": "Deleted",
+        "desc_required": "Description is required",
+        "generating": "Generating...",
+        "done_excl": "Done!",
+        "deleting_n_tasks": "Deleting {} tasks...",
+        "person_deleted": "Person deleted",
         # Common Errors
         "error_generic": "An error occurred",
         # Board

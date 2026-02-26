@@ -126,18 +126,18 @@ class HistoryView:
             )
 
             # Register event listeners
-            def restore_row(e):
+            async def restore_row(e):
                 row_id = e.args
                 # t.id is UUID, row_id is string from table
                 todo = next((t for t in self.todos if str(t.id) == str(row_id)), None)
                 if todo:
-                    self.on_restore(todo)
+                    await self.on_restore(todo)
 
-            def delete_row(e):
+            async def delete_row(e):
                 row_id = e.args
                 todo = next((t for t in self.todos if str(t.id) == str(row_id)), None)
                 if todo:
-                    self.on_delete(todo)
+                    await self.on_delete(todo)
 
             table.on("restore", restore_row)
             table.on("delete", delete_row)
@@ -166,12 +166,14 @@ class HistoryView:
                 )
 
             # Slots for Actions Column
-            with table.add_slot("body-cell-actions"):
-                # Using ui.row to ensure buttons are side-by-side
-                with ui.row().classes("items-center justify-center no-wrap gap-1"):
-                    ui.button(icon="restore").props(
-                        "flat dense round color=primary"
-                    ).on("click", js_handler="() => $emit('restore', props.row.id)")
-                    ui.button(icon="delete").props(
-                        "flat dense round color=negative"
-                    ).on("click", js_handler="() => $emit('delete', props.row.id)")
+            table.add_slot(
+                "body-cell-actions",
+                """
+                <q-td :props="props">
+                    <div class="flex items-center justify-center no-wrap gap-1">
+                        <q-btn flat dense round icon="restore" color="primary" @click="$parent.$emit('restore', props.row.id)" />
+                        <q-btn flat dense round icon="delete" color="negative" @click="$parent.$emit('delete', props.row.id)" />
+                    </div>
+                </q-td>
+                """,
+            )
