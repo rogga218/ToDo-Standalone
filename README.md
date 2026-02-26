@@ -107,7 +107,7 @@ This project has been refactored to specificially focus on a single, native Pyth
     ```bash
     pip install -r requirements.txt
     ```
-    
+
 ### Configuration
 
 Create a `.env` file in the root directory (use `.env.example` as a template).
@@ -128,6 +128,8 @@ Create a `.env` file in the root directory (use `.env.example` as a template).
 Build and start the container:
 ```bash
 podman-compose up --build -d
+```
+```bash
 docker-compose up --build -d
 ```
 The app will be available at [http://localhost:8080](http://localhost:8080).
@@ -170,6 +172,8 @@ To run the automated test suite using `pytest`:
 **With Podman/Docker:**
 ```bash
 podman-compose run --rm app pytest
+```
+```bash
 docker-compose run --rm app pytest
 ```
 
@@ -187,6 +191,8 @@ You can populate the database with mock data (sample persons and todos) for test
 **With Podman/Docker:**
 ```bash
 podman-compose run --rm app python -m src.seed_data
+```
+```bash
 docker-compose run --rm app python -m src.seed_data
 ```
 
