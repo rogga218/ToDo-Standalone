@@ -26,4 +26,4 @@ jobs:
         
     - name: Test with pytest
       run: |
-        pytest -v --cov=src --cov-fail-under=55 --cov-report=term-missing
+        pytest -v --cov=src --cov-fail-under=68 --cov-report=term-missing
