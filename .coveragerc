@@ -1,4 +1,0 @@
-[run]
-omit =
-    src/main.py
-    src/ui/routes.py

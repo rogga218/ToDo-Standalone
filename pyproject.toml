@@ -6,4 +6,4 @@ testpaths = ["tests"]
 addopts = "-v --cov=src --cov-fail-under=68 --cov-report=term-missing"
 
 [tool.coverage.run]
-omit = ["src/main.py"]
+omit = ["src/main.py", "src/ui/routes.py"]
