@@ -1,6 +1,6 @@
 # ToDo App (NiceGUI Standalone)
 
-A modern, fast, and simple ToDo application built with **NiceGUI** and **SQLite**.
+A modern, fast, and simple ToDo application built with **NiceGUI** and **SQLite**. Made with Google Antigravity and Gemini.
 
 This project has been refactored to specificially focus on a single, native Python implementation, consolidating previous backend and frontend components into a unified structure.
 
@@ -86,7 +86,7 @@ This project has been refactored to specificially focus on a single, native Pyth
 ### Prerequisites
 
 -   Python 3.12+
--   Podman (or Docker) - *Optional, for containerized run*
+-   Podman or Docker - *Optional, for containerized run*
 
 ### Installation
 
@@ -107,7 +107,7 @@ This project has been refactored to specificially focus on a single, native Pyth
     ```bash
     pip install -r requirements.txt
     ```
-
+    
 ### Configuration
 
 Create a `.env` file in the root directory (use `.env.example` as a template).
@@ -123,11 +123,12 @@ Create a `.env` file in the root directory (use `.env.example` as a template).
 
 ## Running the App
 
-### Development Mode
+### Run with Podman/Docker
 
-Run the application directly with Python:
+Build and start the container:
 ```bash
-python -m src.main
+podman-compose up --build -d
+docker-compose up --build -d
 ```
 The app will be available at [http://localhost:8080](http://localhost:8080).
 
@@ -144,24 +145,13 @@ To package the application as a standalone `.exe` file (Windows):
 2.  **Run the Executable**:
     Locate `dist/ToDoApp.exe` and run it. The database `todo.db` will be created in the same folder.
 
-### Run with Podman/Docker
+### Development Mode
 
-Build and start the container:
+Run the application directly with Python:
 ```bash
-podman-compose up --build -d
+python -m src.main
 ```
-
-### Docker/Podman Cleanup
-
-To clean up stopped containers, unused networks, and dangling images:
-```bash
-podman system prune
-```
-
-To completely remove the app's containers, networks, volumes, and images:
-```bash
-podman-compose down --rmi all -v
-```
+The app will be available at [http://localhost:8080](http://localhost:8080).
 
 ## Testing & Data
 
@@ -169,7 +159,19 @@ This section covers how to run automated tests and seed the database with test d
 
 ### Running Tests
 
+The test suite includes:
+- **Unit Tests**: Services, Models, API Client (Mocked), UI Controller (Mocked), and Core Utilities.
+- **Integration Tests**: FastAPI endpoint edge cases and routing against an in-memory database.
+- **Coverage Enforcement**: The test suite mandates strict code coverage testing (`pytest-cov > 55%`).
+*A timestamped test report is generated in `tests/testreport/` after each run.*
+
 To run the automated test suite using `pytest`:
+
+**With Podman/Docker:**
+```bash
+podman-compose run --rm app pytest
+docker-compose run --rm app pytest
+```
 
 **Locally:**
 ```bash
@@ -178,32 +180,26 @@ pip install -r requirements.txt
 pytest
 ```
 
-The test suite includes:
-- **Unit Tests**: Services, Models, API Client (Mocked), UI Controller (Mocked), and Core Utilities.
-- **Integration Tests**: FastAPI endpoint edge cases and routing against an in-memory database.
-- **Coverage Enforcement**: The test suite mandates strict code coverage testing (`pytest-cov > 55%`).
-
-**With Podman:**
-```bash
-podman-compose run --rm app pytest
-```
-*A timestamped test report is generated in `tests/testreport/` after each run.*
-
 ### Seeding Test Data
 
 You can populate the database with mock data (sample persons and todos) for testing purposes.
+
+**With Podman/Docker:**
+```bash
+podman-compose run --rm app python -m src.seed_data
+docker-compose run --rm app python -m src.seed_data
+```
 
 **Locally:**
 ```bash
 python -m src.seed_data
 ```
 
-**With Podman:**
-```bash
-podman-compose run --rm app python -m src.seed_data
-```
-
-## Quick Links (when running as a Container in Podman or Docker)
+## Quick Links
 
 -   **App**: [http://localhost:8080](http://localhost:8080)
 -   **API JSON**: [http://localhost:8080/openapi.json](http://localhost:8080/openapi.json)
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
