@@ -1,27 +1,48 @@
 # ToDo App (NiceGUI Standalone)
 
-A modern, fast, and simple ToDo application built with **NiceGUI** and **SQLite**. 
-Made with Google Antigravity and Gemini.
+![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-blue.svg?logo=python&logoColor=white)
+![NiceGUI](https://img.shields.io/badge/UI-NiceGUI-green.svg)
+![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg?logo=fastapi&logoColor=white)
+![SQLite](https://img.shields.io/badge/Database-SQLite-07405e.svg?logo=sqlite&logoColor=white)
+![Docker/Podman](https://img.shields.io/badge/Container-Podman%20%7C%20Docker-2496ED.svg?logo=docker&logoColor=white)
+![Google Antigravity](https://img.shields.io/badge/AI_Agent-Google_Antigravity-4285F4.svg?logo=google&logoColor=white)
+![License MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
-This project has been refactored to specificially focus on a single, native Python implementation, consolidating previous backend and frontend components into a unified structure.
+A modern, fast, and simple ToDo application built with **NiceGUI** and **SQLite**. 
+Developed with **Google Antigravity** and **Gemini**.
+
+This project has been refactored to specifically focus on a single, native Python implementation. It is primarily built to be deployed as a **Container (Podman/Docker)**, with the added bonus of being easily bundled into a unified **Standalone Desktop App (.exe)**.
 
 ## Features
 
--   **Native Python UI**: Built with [NiceGUI](https://nicegui.io).
--   **Integrated Backend**: Business logic runs directly within the application (no internal HTTP requests).
--   **SQLite Database**: Simple, file-based database for easy deployment.
--   **Localization**: Built-in support for multiple languages (English and Swedish).
--   **AI Subtasks**: Auto-generate subtasks using Google Gemini.
--   **Responsive Design**: Works on Desktop and Mobile.
--   **Dark Mode**: Enabled by default.
+-   **Container First Deployment**: Optimized for Podman/Docker orchestrations for seamless, isolated hosting.
+-   **Bonus: Standalone Desktop App**: Can be packaged as a maximized native OS window (via `pywebview`) for local desktop setups without requiring a server.
+-   **Native Python UI**: Fast and reactive interfaces built with [NiceGUI](https://nicegui.io).
+-   **Integrated Architecture**: FastAPI and business logic run directly within the same process—eliminating internal HTTP network overhead.
+-   **Zero-Config Database**: Uses a local SQLite database file (`todo.db`) for immediate out-of-the-box usage.
+-   **AI Assistant Integration**: Auto-generates intelligent subtasks using Google Gemini (`google-genai`).
+-   **Localization**: First-class built-in support for English and Swedish.
+-   **Modern UX**: Features persistent dark mode, pagination, responsive layouts, data filtering, and sleek dialogs.
+-   **Robust Process Management**: Ensures clean exits with zero zombie processes on shutdown.
 
 ## Tech Stack
 
--   **Frontend/UI**: NiceGUI (Vue.js based)
--   **Backend**: FastAPI (Integrated)
--   **Database**: SQLite with SQLModel (ORM)
--   **AI**: Google Generative AI (Gemini)
--   **Build Tool**: PyInstaller
+### Core Application
+-   **User Interface**: [NiceGUI](https://nicegui.io) (Vue.js, Tailwind CSS)
+-   **Web Framework**: FastAPI & Uvicorn (Integrated)
+-   **Database Provider**: SQLite & SQLModel (ORM / Pydantic V2)
+-   **AI Engine**: Google Generative AI (Gemini)
+
+### Desktop Integration & Build
+-   **Native Window Edge**: `pywebview`
+-   **Process Management**: `psutil`
+-   **Executable Bundle**: PyInstaller
+
+### Quality & Testing
+-   **Testing Framework**: pytest & pytest-asyncio
+-   **Coverage**: pytest-cov (Enforced strict coverage threshold >65%)
+-   **Linting & Formatting**: Ruff
+-   **Type Checking**: Mypy
 
 ## Project Structure
 
@@ -92,8 +113,8 @@ This project has been refactored to specificially focus on a single, native Pyth
 
 ### Prerequisites
 
--   Python 3.12+
--   Podman or Docker - *Optional, for containerized run*
+-   Python 3.13+
+-   Podman or Docker - *For containerized run*
 
 ### Installation
 
@@ -172,7 +193,7 @@ The test suite includes:
 - **Unit Tests**: Services, Models, API Client (Mocked), UI Controller (Mocked), and Core Utilities.
 - **Integration Tests**: FastAPI endpoint edge cases and routing against an in-memory database.
 - **Coverage Enforcement**: The test suite mandates strict code coverage testing (`pytest-cov > 65%`).
-*A timestamped test report is generated in `tests/testreport/` after each run.*
+> *A timestamped test report is generated in `tests/testreport/` after each run.*
 
 To run the automated test suite using `pytest`:
 
