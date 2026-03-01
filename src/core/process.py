@@ -85,11 +85,12 @@ def shutdown_cleanup(logger):
         logger.info(f"Root process: PID {root_pid} ({root.name()}). Killing entire process tree...")
 
         # taskkill /F /T kills the entire tree from the given PID (Windows)
+        # CREATE_NO_WINDOW is Windows-only; use getattr for cross-platform safety
         subprocess.Popen(
             ["taskkill", "/F", "/T", "/PID", str(root_pid)],
             stdout=subprocess.DEVNULL,
             stderr=subprocess.DEVNULL,
-            creationflags=subprocess.CREATE_NO_WINDOW,  # type: ignore[attr-defined]
+            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0),
         )
 
         logger.info("Cleanup initiated.")

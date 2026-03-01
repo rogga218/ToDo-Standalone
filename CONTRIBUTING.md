@@ -8,7 +8,7 @@ To set up your local development environment, please follow these steps:
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/<your-username>/ToDo-Standalone.git
+   git clone https://github.com/rogga218/ToDo-Standalone.git
    cd ToDo-Standalone
    ```
 
