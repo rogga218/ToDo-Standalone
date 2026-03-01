@@ -5,11 +5,10 @@
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg?logo=fastapi&logoColor=white)
 ![SQLite](https://img.shields.io/badge/Database-SQLite-07405e.svg?logo=sqlite&logoColor=white)
 ![Docker/Podman](https://img.shields.io/badge/Container-Podman%20%7C%20Docker-2496ED.svg?logo=docker&logoColor=white)
-![Google Antigravity](https://img.shields.io/badge/AI_Agent-Google_Antigravity-4285F4.svg?logo=google&logoColor=white)
 ![License MIT](https://img.shields.io/badge/License-MIT-yellow.svg)
 
 A modern, fast, and simple ToDo application built with **NiceGUI** and **SQLite**. 
-Developed with **Google Antigravity** and **Gemini**.
+> Developed with **Google Antigravity** and **Gemini**.
 
 This project has been refactored to specifically focus on a single, native Python implementation. It is primarily built to be deployed as a **Container (Podman/Docker)**, with the added bonus of being easily bundled into a unified **Standalone Desktop App (.exe)**.
 
