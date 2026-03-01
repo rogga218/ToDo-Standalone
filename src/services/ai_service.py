@@ -1,10 +1,12 @@
-import uuid
 import json
-from sqlmodel import Session, select
-from sqlalchemy.orm import selectinload
+import uuid
+
 from fastapi import HTTPException
-from src.models import Todo, Subtask
+from sqlalchemy.orm import selectinload
+from sqlmodel import Session, select
+
 from src.config import get_settings
+from src.models import Subtask, Todo
 
 
 def generate_subtasks(session: Session, todo_id: uuid.UUID) -> Todo:
@@ -29,7 +31,7 @@ def generate_subtasks(session: Session, todo_id: uuid.UUID) -> Todo:
         Bryt ner följande uppgift i 3-5 konkreta deluppgifter på Svenska.
         Uppgift: {todo.title}
         Beskrivning: {todo.description}
-        
+
         Returnera ENDAST en giltig JSON-array av strängar. Exempel: ["Köpa färg", "Måla vägg"]
         """,
         )
@@ -56,8 +58,7 @@ def generate_subtasks(session: Session, todo_id: uuid.UUID) -> Todo:
 
         # Refresh with subtasks loaded
         query = (
-            # type: ignore[arg-type]
-            select(Todo).where(Todo.id == todo_id).options(selectinload(Todo.subtasks))
+            select(Todo).where(Todo.id == todo_id).options(selectinload(Todo.subtasks))  # type: ignore[arg-type]
         )
         todo = session.exec(query).first()
         if not todo:

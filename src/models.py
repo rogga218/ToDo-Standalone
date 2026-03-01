@@ -1,9 +1,10 @@
 import uuid
-from datetime import date, timedelta, datetime, timezone
-from typing import Optional, List
-from sqlmodel import Field, SQLModel, Relationship
+from datetime import date, datetime, timedelta, timezone
+from typing import List, Optional
+
+from pydantic import field_validator
 from sqlalchemy import Column, DateTime
-from pydantic import field_validator, ConfigDict
+from sqlmodel import Field, Relationship, SQLModel
 
 
 def get_default_deadline():
@@ -22,12 +23,10 @@ class PersonBase(SQLModel):
         min_length=2,
         max_length=50,
         # Regex: Whitelist - Start with letter, No trailing space
-        schema_extra={
-            "pattern": r"^[a-zA-Z\u00C0-\u00FF][a-zA-Z\u00C0-\u00FF \-\']*[a-zA-Z\u00C0-\u00FF]$"
-        },
+        schema_extra={"pattern": r"^[a-zA-Z\u00C0-\u00FF][a-zA-Z\u00C0-\u00FF \-\']*[a-zA-Z\u00C0-\u00FF]$"},
     )
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = {"extra": "forbid"}
 
 
 class Person(PersonBase, table=True):
@@ -109,7 +108,7 @@ class TodoBase(SQLModel):
     deadline: date = Field(default_factory=get_default_deadline)
     person_id: uuid.UUID = Field(foreign_key="person.id")  # Foreign Key
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = {"extra": "forbid"}
 
 
 # Tabell-modell (inkluderar ID)
@@ -150,7 +149,7 @@ class TodoUpdate(SQLModel):
     priority: Optional[int] = Field(default=None, ge=1, le=3)
     deadline: Optional[date] = None
 
-    model_config = ConfigDict(extra="forbid")
+    model_config = {"extra": "forbid"}
 
     @field_validator("deadline", mode="before")
     def validate_deadline_type(cls, v):

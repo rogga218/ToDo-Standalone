@@ -1,10 +1,10 @@
+from typing import Any, Callable, Dict, List
+
 from nicegui import ui
-from typing import List, Dict, Callable, Any
-from src.ui.api_client import api
+
 from src.config import get_settings
 from src.models import Person, TodoRead
-
-
+from src.ui.api_client import api
 from src.ui.translations import get_text
 
 
@@ -132,13 +132,9 @@ class BoardView:
         end_idx = start_idx + page_size
         visible_columns = columns_data[start_idx:end_idx]
 
-        with ui.row().classes(
-            "w-full h-full gap-4 overflow-x-auto no-wrap p-4 items-start"
-        ):
+        with ui.row().classes("w-full h-full gap-4 overflow-x-auto no-wrap p-4 items-start"):
             for col in visible_columns:
-                with ui.column().classes(
-                    f"min-w-[320px] flex-1 h-full rounded-xl p-4 {col['bg']} border"
-                ):
+                with ui.column().classes(f"min-w-[320px] flex-1 h-full rounded-xl p-4 {col['bg']} border"):
                     # Header with Indicator
                     # Explicit cast to list
                     items: List[TodoRead] = col["items"]
@@ -146,9 +142,7 @@ class BoardView:
                     indicator_color = "bg-green-500" if all_completed else "bg-red-500"
 
                     with ui.row().classes("items-center mb-4"):
-                        ui.label().classes(
-                            f"w-3 h-3 rounded-full mr-2 {indicator_color}"
-                        )
+                        ui.label().classes(f"w-3 h-3 rounded-full mr-2 {indicator_color}")
                         ui.label(f"{col['title']} ({len(items)})").classes(
                             "text-lg font-bold text-gray-900 dark:text-white"
                         )
@@ -174,13 +168,9 @@ class BoardView:
         with ui.card().classes(card_classes):
             # Header: Person
             # Access p.id and p.name
-            person_name = next(
-                (p.name for p in self.persons if str(p.id) == str(todo.person_id)), "?"
-            )
+            person_name = next((p.name for p in self.persons if str(p.id) == str(todo.person_id)), "?")
 
-            with ui.row().classes(
-                "w-full justify-between items-center text-xs opacity-70 mb-1"
-            ):
+            with ui.row().classes("w-full justify-between items-center text-xs opacity-70 mb-1"):
                 ui.label(person_name).classes("font-bold")
                 if todo.deadline:
                     ui.label(str(todo.deadline))
@@ -193,18 +183,14 @@ class BoardView:
 
             ui.label(todo.title).classes(title_classes)
             if todo.description:
-                ui.label(todo.description).classes(
-                    "text-xs opacity-80 mb-2 block break-words whitespace-pre-wrap"
-                )
+                ui.label(todo.description).classes("text-xs opacity-80 mb-2 block break-words whitespace-pre-wrap")
 
             # Subtasks
             subtasks = todo.subtasks
             if subtasks:
                 with (
                     ui.expansion()
-                    .classes(
-                        "w-full bg-gray-100 dark:bg-slate-900/50 rounded text-xs mb-2"
-                    )
+                    .classes("w-full bg-gray-100 dark:bg-slate-900/50 rounded text-xs mb-2")
                     .props(f'dense icon="list" label="{self.t("subtasks")}"')
                 ):
                     for sub in subtasks:
@@ -212,13 +198,10 @@ class BoardView:
                             ui.checkbox(
                                 value=sub.completed,
                                 # type: ignore[arg-type]
-                                on_change=lambda e, s=sub: self.toggle_subtask(
-                                    todo, s, e.value
-                                ),
+                                on_change=lambda e, s=sub: self.toggle_subtask(todo, s, e.value),
                             ).props("dense")
                             ui.label(sub.title).classes(
-                                "flex-1 break-words opacity-80"
-                                + (" line-through" if sub.completed else "")
+                                "flex-1 break-words opacity-80" + (" line-through" if sub.completed else "")
                             )
 
             # Actions
@@ -241,22 +224,18 @@ class BoardView:
                         ai_btn.disable()
                         ai_btn.tooltip(self.t("subtasks_exist"))
 
-                ui.button(icon="edit", on_click=lambda: self.on_edit(todo)).props(
-                    "flat dense size=sm round"
-                ).classes(icon_classes).tooltip(self.t("edit"))
+                ui.button(icon="edit", on_click=lambda: self.on_edit(todo)).props("flat dense size=sm round").classes(
+                    icon_classes
+                ).tooltip(self.t("edit"))
 
                 if todo.completed:
-                    ui.button(
-                        icon="replay", on_click=lambda: self.toggle_complete(todo)
-                    ).props("flat dense size=sm round").classes(
-                        "text-gray-500 dark:text-gray-400"
-                    ).tooltip(self.t("undo"))
+                    ui.button(icon="replay", on_click=lambda: self.toggle_complete(todo)).props(
+                        "flat dense size=sm round"
+                    ).classes("text-gray-500 dark:text-gray-400").tooltip(self.t("undo"))
                 else:
-                    ui.button(
-                        icon="check", on_click=lambda: self.toggle_complete(todo)
-                    ).props("flat dense size=sm round").classes(
-                        "text-green-600 dark:text-green-400"
-                    ).tooltip(self.t("done"))
+                    ui.button(icon="check", on_click=lambda: self.toggle_complete(todo)).props(
+                        "flat dense size=sm round"
+                    ).classes("text-green-600 dark:text-green-400").tooltip(self.t("done"))
 
                 ui.button(icon="delete", on_click=lambda: self.on_delete(todo)).props(
                     "flat dense size=sm round"
@@ -269,7 +248,8 @@ class BoardView:
         # But here we modify it locally first?
         # Actually controller's on_update calls api.update_todo(model_dump)
         # We can just toggle and call on_update.
-        # Note: We can't modify the object in place if it is immutable, but Pydantic models are mutable by default unless frozen.
+        # Note: We can't modify the object in place if it is immutable,
+        # but Pydantic models are mutable by default unless frozen.
 
         # Create a copy or just modify.
         # Ideally we don't modify the local object until confirmed, but for UI responsiveness we might.

@@ -1,13 +1,14 @@
 import asyncio
 from typing import List
-from nicegui import ui, app
+
+from nicegui import app, ui
 
 from src.models import Person, TodoRead
 from src.ui.api_client import api
 from src.ui.components.dialogs import PersonDialog, TodoDialog
+from src.ui.layout import Layout
 from src.ui.pages.board import BoardView
 from src.ui.pages.history import HistoryView
-from src.ui.layout import Layout
 from src.ui.translations import get_text
 
 
@@ -27,9 +28,7 @@ class ToDoController:
 
     async def initialize(self):
         """Initial data fetch."""
-        self.todos, self.persons = await asyncio.gather(
-            api.get_todos(), api.get_persons()
-        )
+        self.todos, self.persons = await asyncio.gather(api.get_todos(), api.get_persons())
 
     async def refresh(self):
         """Soft Refresh: Fetch new data and re-render content."""
@@ -59,9 +58,7 @@ class ToDoController:
         async def handle_filter_change(key, value):
             app.storage.user[f"filter_{key}"] = value
             # Just re-render content, no need to fetch
-            await self.render_content(
-                self.current_page_name, self.current_page_page_idx
-            )
+            await self.render_content(self.current_page_name, self.current_page_page_idx)
 
         async def handle_language_change(new_lang):
             app.storage.user["language"] = new_lang
@@ -77,9 +74,7 @@ class ToDoController:
             d.open()
 
         async def handle_create_todo(e):
-            d = TodoDialog(
-                self.persons, on_success=self.refresh, language=self.language
-            )
+            d = TodoDialog(self.persons, on_success=self.refresh, language=self.language)
             d.create()
 
         self.layout_component = Layout(
@@ -124,13 +119,9 @@ class ToDoController:
 
         filtered_todos = self.todos
         if filter_person:
-            filtered_todos = [
-                t for t in filtered_todos if str(t.person_id) == str(filter_person)
-            ]
+            filtered_todos = [t for t in filtered_todos if str(t.person_id) == str(filter_person)]
         if filter_priority:
-            filtered_todos = [
-                t for t in filtered_todos if str(t.priority) == str(filter_priority)
-            ]
+            filtered_todos = [t for t in filtered_todos if str(t.priority) == str(filter_priority)]
 
         with self.content_container:
             # Action Handlers
@@ -151,9 +142,7 @@ class ToDoController:
                     ui.notify(res["error"], type="negative")
 
             def on_edit(todo: TodoRead):
-                d = TodoDialog(
-                    self.persons, on_success=self.refresh, language=self.language
-                )
+                d = TodoDialog(self.persons, on_success=self.refresh, language=self.language)
                 # Dialog expects Dict currently? check Dialogs.
                 # TodoDialog.edit takes props. We should verify TodoDialog.
                 # For now, pass dict to Dialog to be safe or update Dialog.
@@ -222,9 +211,7 @@ class ToDoController:
                 ):
                     ui.button(
                         icon="chevron_left",
-                        on_click=lambda: ui.navigate.to(
-                            f"/board?page={max(0, page_idx - 1)}"
-                        ),
+                        on_click=lambda: ui.navigate.to(f"/board?page={max(0, page_idx - 1)}"),
                     ).props("flat dense round").classes("text-black dark:text-white")
 
                     ui.label(

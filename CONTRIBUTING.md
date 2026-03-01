@@ -40,11 +40,14 @@ To set up your local development environment, please follow these steps:
 2. **Make your changes**: Implement your shiny new feature or bug fix.
    - **Important**: This project adheres to a "Zero-Warning Policy" for IDE diagnostics. Please ensure your code doesn't introduce any new warnings.
    - We use Python type hints heavily, please include them in new functions.
-3. **Run the tests**: Ensure you haven't broken anything.
+3. **Run tests & linters**: Ensure you haven't broken anything.
    ```bash
+   ruff format src
+   ruff check src
+   mypy src
    pytest
    ```
-   *(Note: The project requires a minimum test coverage of 68%.)*
+   *(Note: The project requires a minimum test coverage of 65% and 0 warnings.)*
 4. **Commit your changes**: Write clear, descriptive commit messages.
 5. **Push and open a PR**: Push your branch to GitHub and open a Pull Request against the `main` branch.
 

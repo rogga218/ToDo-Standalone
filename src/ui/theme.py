@@ -15,7 +15,7 @@ def inject_dark_mode_script():
                     document.documentElement.classList.remove("dark");
                 }
             }
-            
+
             // Watch for changes on body class
             const observer = new MutationObserver((mutations) => {
                 mutations.forEach((mutation) => {
@@ -24,7 +24,7 @@ def inject_dark_mode_script():
                     }
                 });
             });
-            
+
             // Start observing
             document.addEventListener("DOMContentLoaded", () => {
                 const body = document.body;

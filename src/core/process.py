@@ -43,34 +43,55 @@ def log_crash(e):
     traceback.print_exc()
 
 
+_cleanup_done = False
+
+
 def shutdown_cleanup(logger):
     """
-    Kill all child processes to ensure no hanging processes after exit.
+    Kill the entire process tree to ensure no hanging processes after exit.
+    Walks up the process tree to find the root ancestor with the same
+    executable name (PyInstaller bootstrapper), then uses taskkill /F /T
+    to forcefully terminate the entire tree.
+    Guarded to only run once even if called from multiple shutdown hooks.
     """
+    global _cleanup_done
+    if _cleanup_done:
+        return
+    _cleanup_done = True
+
+    import subprocess
+
     import psutil  # type: ignore
 
     try:
         logger.info("Performing shutdown cleanup...")
-        current_process = psutil.Process()
-        children = current_process.children(recursive=True)
+        current = psutil.Process()
+        current_name = current.name().lower()
 
-        for child in children:
-            try:
-                logger.info(f"Terminating child process: {child.pid} ({child.name()})")
-                child.terminate()
-            except psutil.NoSuchProcess:
-                pass
+        # Walk up to find the root process of our app
+        root = current
+        try:
+            parent = root.parent()
+            while parent is not None and parent.pid > 0:
+                if parent.name().lower() == current_name:
+                    root = parent
+                    parent = root.parent()
+                else:
+                    break
+        except (psutil.NoSuchProcess, psutil.AccessDenied):
+            pass
 
-        # Wait for termination
-        _, alive = psutil.wait_procs(children, timeout=3)
+        root_pid = root.pid
+        logger.info(f"Root process: PID {root_pid} ({root.name()}). Killing entire process tree...")
 
-        for p in alive:
-            try:
-                logger.warning(f"Killing stubborn process: {p.pid} ({p.name()})")
-                p.kill()
-            except psutil.NoSuchProcess:
-                pass
+        # taskkill /F /T kills the entire tree from the given PID (Windows)
+        subprocess.Popen(
+            ["taskkill", "/F", "/T", "/PID", str(root_pid)],
+            stdout=subprocess.DEVNULL,
+            stderr=subprocess.DEVNULL,
+            creationflags=subprocess.CREATE_NO_WINDOW,  # type: ignore[attr-defined]
+        )
 
-        logger.info("Cleanup complete.")
+        logger.info("Cleanup initiated.")
     except Exception as e:
         logger.error(f"Error during shutdown cleanup: {e}")

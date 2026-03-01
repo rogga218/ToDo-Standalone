@@ -1,9 +1,11 @@
-from typing import List
 import uuid
-from sqlmodel import Session, select
+from typing import List
+
 from fastapi import HTTPException
-from src.models import Person, PersonCreate, Todo
+from sqlmodel import Session, select
+
 from src.config import logger
+from src.models import Person, PersonCreate, Todo
 
 
 def create_person(session: Session, person: PersonCreate) -> Person:
@@ -43,9 +45,7 @@ def delete_person(session: Session, person_id: str) -> None:
         raise HTTPException(status_code=404, detail="Person not found")
 
     # Check for associated todos
-    existing_todos = session.exec(
-        select(Todo).where(Todo.person_id == person.id)
-    ).first()
+    existing_todos = session.exec(select(Todo).where(Todo.person_id == person.id)).first()
     if existing_todos:
         raise HTTPException(
             status_code=400,

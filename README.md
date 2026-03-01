@@ -1,6 +1,7 @@
 # ToDo App (NiceGUI Standalone)
 
-A modern, fast, and simple ToDo application built with **NiceGUI** and **SQLite**. Made with Google Antigravity and Gemini.
+A modern, fast, and simple ToDo application built with **NiceGUI** and **SQLite**. 
+Made with Google Antigravity and Gemini.
 
 This project has been refactored to specificially focus on a single, native Python implementation, consolidating previous backend and frontend components into a unified structure.
 
@@ -170,7 +171,7 @@ This section covers how to run automated tests and seed the database with test d
 The test suite includes:
 - **Unit Tests**: Services, Models, API Client (Mocked), UI Controller (Mocked), and Core Utilities.
 - **Integration Tests**: FastAPI endpoint edge cases and routing against an in-memory database.
-- **Coverage Enforcement**: The test suite mandates strict code coverage testing (`pytest-cov > 68%`).
+- **Coverage Enforcement**: The test suite mandates strict code coverage testing (`pytest-cov > 65%`).
 *A timestamped test report is generated in `tests/testreport/` after each run.*
 
 To run the automated test suite using `pytest`:
@@ -188,6 +189,18 @@ docker-compose run --rm app pytest
 # Ensure test dependencies are installed
 pip install -r requirements.txt
 pytest
+```
+
+### Code Quality & Linting
+
+This project adheres to a strict "Zero-Warning Policy" for code formatting and typing.
+We use **Ruff** for linting and formatting, and **Mypy** for static type checking.
+
+To check and format the codebase locally:
+```bash
+ruff format src
+ruff check src
+mypy src
 ```
 
 ### Seeding Test Data

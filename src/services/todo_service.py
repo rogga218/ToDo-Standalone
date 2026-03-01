@@ -1,15 +1,17 @@
-from typing import List, Optional
 import uuid
-from sqlmodel import Session, select
-from sqlalchemy.orm import selectinload
+from typing import List, Optional
+
 from fastapi import HTTPException
+from sqlalchemy.orm import selectinload
+from sqlmodel import Session, select
+
 from src.models import (
-    Todo,
-    TodoCreate,
-    TodoUpdate,
     Person,
     Subtask,
     SubtaskCreate,
+    Todo,
+    TodoCreate,
+    TodoUpdate,
 )
 
 
@@ -33,8 +35,7 @@ def get_todos(
     filter_person_id: Optional[uuid.UUID] = None,
     filter_priority: Optional[int] = None,
 ) -> List[Todo]:
-    # type: ignore[arg-type]
-    query = select(Todo).options(selectinload(Todo.subtasks)).order_by(Todo.title)
+    query = select(Todo).options(selectinload(Todo.subtasks)).order_by(Todo.title)  # type: ignore[arg-type]
 
     # Apply filters if provided (useful for direct service calls even if API didn't fully use them yet)
     if filter_person_id:
@@ -47,8 +48,7 @@ def get_todos(
 
 
 def get_todo(session: Session, todo_id: uuid.UUID) -> Optional[Todo]:
-    # type: ignore[arg-type]
-    query = select(Todo).where(Todo.id == todo_id).options(selectinload(Todo.subtasks))
+    query = select(Todo).where(Todo.id == todo_id).options(selectinload(Todo.subtasks))  # type: ignore[arg-type]
     return session.exec(query).first()
 
 

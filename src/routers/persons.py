@@ -1,11 +1,12 @@
 from typing import List
-from fastapi import APIRouter, HTTPException, Request, Depends
+
+from fastapi import APIRouter, Depends, HTTPException, Request
 from sqlmodel import Session
 
-from src.database import get_session
-from src.models import PersonRead, PersonCreate
-from src.services import person_service
 from src.config import logger
+from src.database import get_session
+from src.models import PersonCreate, PersonRead
+from src.services import person_service
 
 router = APIRouter(prefix="/persons", tags=["Persons"])
 

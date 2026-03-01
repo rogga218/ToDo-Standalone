@@ -1,14 +1,16 @@
 import uuid
 from typing import List
-from fastapi import APIRouter, HTTPException, Query, Request, Depends
+
+from fastapi import APIRouter, Depends, HTTPException, Query, Request
 from sqlmodel import Session
+
 from src.database import get_session
 from src.models import (
-    TodoRead,
-    TodoCreate,
-    TodoUpdate,
-    SubtaskRead,
     SubtaskCreate,
+    SubtaskRead,
+    TodoCreate,
+    TodoRead,
+    TodoUpdate,
 )
 from src.services import todo_service
 
@@ -54,9 +56,7 @@ def read_todos(
 ):
     """Hämta alla uppgifter"""
     allowed_params = {"offset", "limit"}
-    extra_params = [
-        key for key in request.query_params.keys() if key not in allowed_params
-    ]
+    extra_params = [key for key in request.query_params.keys() if key not in allowed_params]
 
     if extra_params:
         raise HTTPException(
@@ -96,16 +96,12 @@ def read_todo(todo_id: uuid.UUID, session: Session = Depends(get_session)):
         400: {"description": "Bad Request"},
     },
 )
-def update_todo(
-    todo_id: uuid.UUID, todo_data: TodoUpdate, session: Session = Depends(get_session)
-):
+def update_todo(todo_id: uuid.UUID, todo_data: TodoUpdate, session: Session = Depends(get_session)):
     """Uppdatera en uppgift (partiell uppdatering)"""
     return todo_service.update_todo(session, todo_id, todo_data)
 
 
-@router.delete(
-    "/todos/{todo_id:uuid}", responses={404: {"description": "Todo not found"}}
-)
+@router.delete("/todos/{todo_id:uuid}", responses={404: {"description": "Todo not found"}})
 def delete_todo(todo_id: uuid.UUID, session: Session = Depends(get_session)):
     """Ta bort en uppgift"""
     todo_service.delete_todo(session, todo_id)
@@ -135,15 +131,11 @@ def create_subtask(subtask: SubtaskCreate, session: Session = Depends(get_sessio
         400: {"description": "Bad Request"},
     },
 )
-def update_subtask(
-    subtask_id: uuid.UUID, completed: bool, session: Session = Depends(get_session)
-):
+def update_subtask(subtask_id: uuid.UUID, completed: bool, session: Session = Depends(get_session)):
     return todo_service.update_subtask(session, subtask_id, completed)
 
 
-@router.delete(
-    "/subtasks/{subtask_id}", responses={404: {"description": "Subtask not found"}}
-)
+@router.delete("/subtasks/{subtask_id}", responses={404: {"description": "Subtask not found"}})
 def delete_subtask(subtask_id: uuid.UUID, session: Session = Depends(get_session)):
     todo_service.delete_subtask(session, subtask_id)
     return {"ok": True}

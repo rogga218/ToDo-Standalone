@@ -1,7 +1,8 @@
 from nicegui import ui
+
+from src.config import logger
 from src.ui.controller import ToDoController
 from src.ui.theme import inject_dark_mode_script
-from src.config import logger
 
 
 def setup_routes():
@@ -19,9 +20,7 @@ def setup_routes():
             await controller.render_layout("board", page)
         except Exception as e:
             logger.error(f"Error loading board page: {e}")
-            ui.label(f"Ett fel uppstod vid laddning av sidan: {e}").classes(
-                "text-red-500"
-            )
+            ui.label(f"Ett fel uppstod vid laddning av sidan: {e}").classes("text-red-500")
 
     @ui.page("/history")
     async def history_page():
@@ -32,6 +31,4 @@ def setup_routes():
             await controller.render_layout("history")
         except Exception as e:
             logger.error(f"Error loading history page: {e}")
-            ui.label(f"Ett fel uppstod vid laddning av sidan: {e}").classes(
-                "text-red-500"
-            )
+            ui.label(f"Ett fel uppstod vid laddning av sidan: {e}").classes("text-red-500")

@@ -1,6 +1,8 @@
 import uuid
+
 from fastapi import APIRouter, Depends
 from sqlmodel import Session
+
 from src.database import get_session
 from src.models import TodoRead
 from src.services import ai_service

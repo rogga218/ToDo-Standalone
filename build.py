@@ -24,12 +24,8 @@ def build_executable():
             "wheel",
         ]
     )
-    subprocess.check_call(
-        [sys.executable, "-m", "pip", "install", "-r", "requirements.txt"]
-    )
-    subprocess.check_call(
-        [sys.executable, "-m", "pip", "install", "--upgrade", "pyinstaller"]
-    )
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pyinstaller"])
 
     # Import config AFTER installing dependencies
     try:
@@ -93,9 +89,9 @@ def build_executable():
                     ]
                 )
 
-                from svglib.svglib import svg2rlg
-                from reportlab.graphics import renderPM
                 from PIL import Image
+                from reportlab.graphics import renderPM
+                from svglib.svglib import svg2rlg
 
                 print("Converting logo.svg to logo.ico...")
                 # SVG -> RL Drawing
@@ -129,9 +125,7 @@ def build_executable():
             # Try to convert PNG to ICO
             try:
                 print("Installing Pillow for icon conversion...")
-                subprocess.check_call(
-                    [sys.executable, "-m", "pip", "install", "Pillow"]
-                )
+                subprocess.check_call([sys.executable, "-m", "pip", "install", "Pillow"])
                 from PIL import Image
 
                 print("Converting logo.png to logo.ico...")
@@ -142,9 +136,7 @@ def build_executable():
                 print(f"Failed to convert PNG icon: {e}")
                 print("Build will proceed without a specific icon.")
         else:
-            print(
-                "No logo.ico, logo.svg, or logo.png found. Build will proceed without an icon."
-            )
+            print("No logo.ico, logo.svg, or logo.png found. Build will proceed without an icon.")
 
     # PyInstaller Command
     # Use python -m PyInstaller to ensure we use the installed module in current env

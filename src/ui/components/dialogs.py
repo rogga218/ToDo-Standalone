@@ -1,9 +1,10 @@
-from nicegui import ui
-from typing import Callable, List, Dict, Optional
 from datetime import date, timedelta
-from src.ui.api_client import api
-from src.models import Person, TodoRead
+from typing import Callable, Dict, List, Optional
 
+from nicegui import ui
+
+from src.models import Person, TodoRead
+from src.ui.api_client import api
 from src.ui.translations import get_text
 
 
@@ -29,11 +30,7 @@ class PersonDialog:
 
             # 1. Create New Person
             with ui.row().classes("w-full items-center gap-2 mb-4"):
-                name_input = (
-                    ui.input(self.t("name_label"), value="")
-                    .classes("flex-grow")
-                    .props("maxlength=50")
-                )
+                name_input = ui.input(self.t("name_label"), value="").classes("flex-grow").props("maxlength=50")
 
                 async def create_new():
                     # Ensure safe string handling if value is None
@@ -53,15 +50,11 @@ class PersonDialog:
                         await self.on_success()  # Refresh Background App
                     else:
                         err = str(res["error"])
-                        if (
-                            "Value error, " in err
-                        ):  # Pydantic V2 prefixes custom errors with "Value error, "
+                        if "Value error, " in err:  # Pydantic V2 prefixes custom errors with "Value error, "
                             err = err.replace("Value error, ", "")
 
                         # Split by newline (if multiple errors) and translate each
-                        err = "\n".join(
-                            self.t(line.strip()) for line in err.split("\n")
-                        )
+                        err = "\n".join(self.t(line.strip()) for line in err.split("\n"))
 
                         # Fallback for generic untranslated exceptions
                         if "Person already exists" in err:
@@ -69,18 +62,12 @@ class PersonDialog:
 
                         ui.notify(err, type="negative")
 
-                ui.button(icon="add", on_click=lambda e: create_new()).props(
-                    "round flat color=green"
-                )
+                ui.button(icon="add", on_click=lambda e: create_new()).props("round flat color=green")
 
             # 2. List Existing Persons
-            ui.label(self.t("existing_persons")).classes(
-                "text-sm text-gray-500 font-bold mb-2"
-            )
+            ui.label(self.t("existing_persons")).classes("text-sm text-gray-500 font-bold mb-2")
 
-            with ui.scroll_area().classes(
-                "h-64 w-full border border-gray-200 dark:border-gray-700 rounded p-2"
-            ):
+            with ui.scroll_area().classes("h-64 w-full border border-gray-200 dark:border-gray-700 rounded p-2"):
                 # Container for the list - Must be created INSIDE the scroll area
                 self.list_container = ui.column().classes("w-full")
                 with self.list_container:
@@ -113,11 +100,9 @@ class PersonDialog:
 
                 if has_todos:
                     # Disabled delete button with tooltip
-                    ui.button(icon="delete_forever").props(
-                        "flat round dense color=grey"
-                    ).tooltip(self.t("cannot_delete_has_todos")).classes(
-                        "cursor-not-allowed"
-                    )
+                    ui.button(icon="delete_forever").props("flat round dense color=grey").tooltip(
+                        self.t("cannot_delete_has_todos")
+                    ).classes("cursor-not-allowed")
                 else:
 
                     def create_delete_handler(person_id):
@@ -139,9 +124,7 @@ class PersonDialog:
 
 
 class TodoDialog:
-    def __init__(
-        self, persons: List[Person], on_success: Callable, language: str = "sv"
-    ):
+    def __init__(self, persons: List[Person], on_success: Callable, language: str = "sv"):
         self.persons = persons
         self.on_success = on_success
         self.language = language
@@ -170,16 +153,8 @@ class TodoDialog:
                 # Default to tomorrow
                 initial_deadline = (date.today() + timedelta(days=1)).isoformat()
 
-            title_input = (
-                ui.input(self.t("title_label"), value=initial_title)
-                .classes("w-full")
-                .props("maxlength=50")
-            )
-            desc_input = (
-                ui.textarea(self.t("desc_label"), value=initial_desc)
-                .classes("w-full")
-                .props("maxlength=500")
-            )
+            title_input = ui.input(self.t("title_label"), value=initial_title).classes("w-full").props("maxlength=50")
+            desc_input = ui.textarea(self.t("desc_label"), value=initial_desc).classes("w-full").props("maxlength=500")
 
             # Person Select
             # p is Person object, access p.id and p.name
@@ -189,9 +164,7 @@ class TodoDialog:
             if initial_person and initial_person not in p_options:
                 initial_person = None
 
-            person_select = ui.select(
-                p_options, label=self.t("person_label"), value=initial_person
-            ).classes("w-full")
+            person_select = ui.select(p_options, label=self.t("person_label"), value=initial_person).classes("w-full")
 
             priority_select = ui.select(
                 {
@@ -208,18 +181,16 @@ class TodoDialog:
                 placeholder="YYYY-MM-DD",
                 value=initial_deadline or "",
             ).classes("w-full")
-            with deadline_input.add_slot("append"):
-                ui.icon("event").on("click", lambda: date_picker.open()).classes(
-                    "cursor-pointer"
-                )
-
             with ui.dialog() as date_picker, ui.card():
-                ui.date(
-                    on_change=lambda e: (
-                        deadline_input.set_value(e.value),
-                        date_picker.close(),
-                    )
-                )
+
+                def on_date_change(e):
+                    deadline_input.set_value(e.value)
+                    date_picker.close()
+
+                ui.date(on_change=on_date_change)
+
+            with deadline_input.add_slot("append"):
+                ui.icon("event").on("click", date_picker.open).classes("cursor-pointer")
 
             async def save():
                 if not title_input.value or not person_select.value:

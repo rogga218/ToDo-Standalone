@@ -1,12 +1,14 @@
 import uuid
-from typing import List, Dict, Any
+from typing import Any, Dict, List
+
 from nicegui import run
-from sqlmodel import Session
-from src.database import engine
-from src.models import PersonCreate, TodoCreate, TodoUpdate, Person, TodoRead
-from src.services import person_service, todo_service, ai_service
 from pydantic import ValidationError
+from sqlmodel import Session
+
 from src.config import logger
+from src.database import engine
+from src.models import Person, PersonCreate, TodoCreate, TodoRead, TodoUpdate
+from src.services import ai_service, person_service, todo_service
 
 
 def _format_error(e: Exception) -> str:
@@ -39,7 +41,7 @@ class ApiClient:
     async def get_persons(self) -> List[Person]:
         try:
             persons = await run_db(person_service.get_persons)
-            return persons
+            return persons  # type: ignore[no-any-return]
         except Exception as e:
             logger.error(f"Error fetching persons: {e}", exc_info=True)
             return []

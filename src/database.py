@@ -1,5 +1,7 @@
 from typing import Generator
-from sqlmodel import create_engine, SQLModel, Session
+
+from sqlmodel import Session, SQLModel, create_engine
+
 from src.config import get_settings, logger
 
 settings = get_settings()

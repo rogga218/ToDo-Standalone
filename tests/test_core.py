@@ -1,8 +1,10 @@
-import pytest
-from unittest.mock import patch, MagicMock
-from src.core.process import log_crash, shutdown_cleanup, init_crash_logging
-from src.core.errors import handle_fatal_error
 import sys
+from unittest.mock import MagicMock, patch
+
+import pytest
+
+from src.core.errors import handle_fatal_error
+from src.core.process import init_crash_logging, log_crash, shutdown_cleanup
 
 
 def test_init_crash_logging_frozen(monkeypatch):
@@ -40,20 +42,34 @@ def test_log_crash_open_fails(mock_print, mock_open):
     mock_print.assert_any_call("Failed to write crash log: Disk Full")
 
 
+@patch("subprocess.Popen")
 @patch("psutil.Process")
-def test_shutdown_cleanup(mock_process):
-    # Setup mock process and children
-    mock_proc_instance = MagicMock()
-    mock_child = MagicMock()
-    mock_child.pid = 123
-    mock_proc_instance.children.return_value = [mock_child]
-    mock_process.return_value = mock_proc_instance
+def test_shutdown_cleanup(mock_process, mock_popen):
+    import src.core.process as proc_module
 
-    # Mock wait_procs to return empty alive list
-    with patch("psutil.wait_procs", return_value=([], [])):
-        logger_mock = MagicMock()
-        shutdown_cleanup(logger_mock)
-        mock_child.terminate.assert_called_once()
+    # Reset the guard flag so the test can run
+    proc_module._cleanup_done = False
+
+    # Setup mock: current process with a parent of different name (no tree walk)
+    mock_current = MagicMock()
+    mock_current.pid = 100
+    mock_current.name.return_value = "TodoApp.exe"
+
+    mock_parent = MagicMock()
+    mock_parent.pid = 50
+    mock_parent.name.return_value = "explorer.exe"
+
+    mock_current.parent.return_value = mock_parent
+    mock_process.return_value = mock_current
+
+    logger_mock = MagicMock()
+    shutdown_cleanup(logger_mock)
+
+    # Should call taskkill with the root PID (current, since parent has different name)
+    mock_popen.assert_called_once()
+    call_args = mock_popen.call_args[0][0]
+    assert call_args[:4] == ["taskkill", "/F", "/T", "/PID"]
+    assert call_args[4] == "100"
 
 
 @patch("src.core.errors.log_crash")

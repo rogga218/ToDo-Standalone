@@ -27,7 +27,8 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "name_required": "Namn krävs",
         "name_too_short": "Namnet måste vara minst 2 tecken",
         "invalid_name_type": "Namnet måste vara en textsträng",
-        "invalid_name_chars": "Namnet innehåller ogiltiga tecken (Tillåtna: bokstäver, mellanslag, bindestreck, apostrofer)",
+        "invalid_name_chars": "Namnet innehåller ogiltiga tecken "
+        "(Tillåtna: bokstäver, mellanslag, bindestreck, apostrofer)",
         "person_created": "Person skapad!",
         "person_exists": "Personen finns redan",
         "save": "Spara",
@@ -73,6 +74,9 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "manage_persons": "HANTERA PERSONER",
         "delete_person_confirm": "Ta bort person?",
         "cannot_delete_has_todos": "Kan inte ta bort: Har uppgifter",
+        # Critical Errors
+        "critical_error_title": "Kritiskt Fel",
+        "critical_error_msg": "Kritiskt Fel:\n{}\n\nSe crash.log för detaljer.",
     },
     "en": {
         # Navigation
@@ -146,6 +150,9 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "manage_persons": "MANAGE PERSONS",
         "delete_person_confirm": "Delete person?",
         "cannot_delete_has_todos": "Cannot delete: Has tasks",
+        # Critical Errors
+        "critical_error_title": "Critical Error",
+        "critical_error_msg": "Critical Error:\n{}\n\nSee crash.log for details.",
     },
 }
 

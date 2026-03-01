@@ -1,7 +1,8 @@
-from nicegui import ui
-from typing import List, Callable, Optional
-from src.models import Person, TodoRead
+from typing import Callable, List, Optional
 
+from nicegui import ui
+
+from src.models import Person, TodoRead
 from src.ui.translations import get_text
 
 
@@ -33,9 +34,7 @@ class HistoryView:
         rows = []
         for t in completed_todos:
             # Use p.id and p.name
-            person_name = next(
-                (p.name for p in self.persons if str(p.id) == str(t.person_id)), "?"
-            )
+            person_name = next((p.name for p in self.persons if str(p.id) == str(t.person_id)), "?")
             rows.append(
                 {
                     "id": str(t.id),
@@ -70,6 +69,8 @@ class HistoryView:
                 "field": "description",
                 "sortable": True,
                 "align": "left",
+                "classes": "whitespace-normal break-words",  # Wrap long descriptions
+                "style": "max-width: 300px;",  # Prevent extreme width and force line breaks
             },
             {
                 "name": "deadline",
@@ -98,16 +99,12 @@ class HistoryView:
         with ui.column().classes("w-full h-full p-4 overflow-y-auto"):
             # Header Row
             with ui.row().classes("w-full justify-between items-center mb-4"):
-                ui.label(self.t("history")).classes(
-                    "text-2xl font-bold !text-black dark:!text-white"
-                )
+                ui.label(self.t("history")).classes("text-2xl font-bold !text-black dark:!text-white")
                 # Placeholder for Bulk Action Button (will be moved here)
                 bulk_action_container = ui.row()
 
             if not rows:
-                ui.label(self.t("no_completed_tasks")).classes(
-                    "text-gray-600 dark:text-gray-400 italic"
-                )
+                ui.label(self.t("no_completed_tasks")).classes("text-gray-600 dark:text-gray-400 italic")
                 return
 
             # Table
@@ -159,11 +156,9 @@ class HistoryView:
 
             # Create Button and Move to Header
             with bulk_action_container:
-                ui.button(
-                    self.t("delete"), icon="delete", on_click=delete_selected
-                ).props("color=red").bind_visibility_from(
-                    table, "selected", backward=lambda s: len(s) > 0
-                )
+                ui.button(self.t("delete"), icon="delete", on_click=delete_selected).props(
+                    "color=red"
+                ).bind_visibility_from(table, "selected", backward=lambda s: len(s) > 0)
 
             # Slots for Actions Column
             table.add_slot(
@@ -171,8 +166,10 @@ class HistoryView:
                 """
                 <q-td :props="props">
                     <div class="flex items-center justify-center no-wrap gap-1">
-                        <q-btn flat dense round icon="restore" color="primary" @click="$parent.$emit('restore', props.row.id)" />
-                        <q-btn flat dense round icon="delete" color="negative" @click="$parent.$emit('delete', props.row.id)" />
+                        <q-btn flat dense round icon="restore" color="primary"
+                               @click="$parent.$emit('restore', props.row.id)" />
+                        <q-btn flat dense round icon="delete" color="negative"
+                               @click="$parent.$emit('delete', props.row.id)" />
                     </div>
                 </q-td>
                 """,

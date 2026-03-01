@@ -1,7 +1,9 @@
-from nicegui import ui, app
 from typing import Callable, List, Optional
-from src.ui.translations import get_text
+
+from nicegui import app, ui
+
 from src.models import Person
+from src.ui.translations import get_text
 
 
 class Layout:
@@ -64,43 +66,36 @@ class Layout:
                         'x="15" y="15" width="70" height="70" rx="10" stroke-width="6" fill="none"'
                     ).classes("stroke-zinc-800 dark:stroke-zinc-100")
                     # Line 1
-                    ui.element("path").props(
-                        'd="M30 40 L70 40" stroke-width="6" stroke-linecap="round"'
-                    ).classes("stroke-zinc-800 dark:stroke-zinc-100")
-                    # Line 2
-                    ui.element("path").props(
-                        'd="M30 60 L60 60" stroke-width="6" stroke-linecap="round"'
-                    ).classes("stroke-zinc-800 dark:stroke-zinc-100")
-                    # Circle
-                    ui.element("circle").props('cx="75" cy="75" r="12"').classes(
-                        "fill-amber-400 dark:fill-amber-300"
+                    ui.element("path").props('d="M30 40 L70 40" stroke-width="6" stroke-linecap="round"').classes(
+                        "stroke-zinc-800 dark:stroke-zinc-100"
                     )
+                    # Line 2
+                    ui.element("path").props('d="M30 60 L60 60" stroke-width="6" stroke-linecap="round"').classes(
+                        "stroke-zinc-800 dark:stroke-zinc-100"
+                    )
+                    # Circle
+                    ui.element("circle").props('cx="75" cy="75" r="12"').classes("fill-amber-400 dark:fill-amber-300")
 
                 with ui.row().classes("gap-4"):
                     # Theme Toggle
                     icon = "dark_mode" if self.dark_mode.value else "light_mode"
                     # Lets use !text classes.
-                    # Actually, if I use style="color: ..." it might not be responsive to dark class easily without css var.
+                    # Actually, if I use style="color: ..." it might not be responsive
+                    # to dark class easily without css var.
                     # Let's stick to Tailwind !important
-                    ui.button(icon=icon, on_click=self.toggle_dark_mode).props(
-                        "flat round size=sm"
-                    ).classes("!text-zinc-900 dark:!text-zinc-100").tooltip(
-                        "Toggle Theme"
-                    )
+                    ui.button(icon=icon, on_click=self.toggle_dark_mode).props("flat round size=sm").classes(
+                        "!text-zinc-900 dark:!text-zinc-100"
+                    ).tooltip("Toggle Theme")
 
                     # Language Toggle
                     flag = "🇸🇪" if self.language == "sv" else "🇬🇧"
                     next_lang = "en" if self.language == "sv" else "sv"
                     ui.button(
                         flag,
-                        on_click=lambda: (
-                            self.on_language_change(next_lang)
-                            if self.on_language_change
-                            else None
-                        ),
-                    ).props("flat round size=sm").classes(
-                        "!text-zinc-900 dark:!text-zinc-100"
-                    ).tooltip("Switch Language")
+                        on_click=lambda: self.on_language_change(next_lang) if self.on_language_change else None,
+                    ).props("flat round size=sm").classes("!text-zinc-900 dark:!text-zinc-100").tooltip(
+                        "Switch Language"
+                    )
 
             # Navigation
             with ui.column().classes("w-full gap-2 mb-8"):
@@ -115,11 +110,10 @@ class Layout:
                     bg = (
                         "bg-blue-600 text-white"
                         if is_active
-                        else "bg-slate-700 hover:bg-slate-600 text-white dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-black"
+                        else "bg-slate-700 hover:bg-slate-600 text-white "
+                        "dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-black"
                     )
-                    ui.button(label, on_click=lambda: ui.navigate.to(target)).classes(
-                        f"w-full {bg}"
-                    )
+                    ui.button(label, on_click=lambda: ui.navigate.to(target)).classes(f"w-full {bg}")
 
                 nav_btn(self.t("dashboard"), "/board", "board")
                 nav_btn(self.t("history"), "/history", "history")
@@ -130,9 +124,7 @@ class Layout:
             )
 
             # Filters
-            ui.label(self.t("filter_label")).classes(
-                "text-xs font-bold text-gray-500 dark:text-slate-400 mb-2"
-            )
+            ui.label(self.t("filter_label")).classes("text-xs font-bold text-gray-500 dark:text-slate-400 mb-2")
 
             # Person Filter
             person_options = {"": self.t("all_persons")}
@@ -162,13 +154,12 @@ class Layout:
 
             # Actions
             with ui.column().classes("w-full gap-2"):
-                ui.button(
-                    self.t("manage_persons"), on_click=self.on_create_person
-                ).classes("w-full bg-green-600 hover:bg-green-700 text-white")
+                ui.button(self.t("manage_persons"), on_click=self.on_create_person).classes(
+                    "w-full bg-green-600 hover:bg-green-700 text-white"
+                )
 
             # Refresh
-            ui.button(
-                self.t("refresh"), on_click=self.on_refresh, icon="refresh"
-            ).classes(
-                "w-full mt-auto bg-slate-700 hover:bg-slate-600 text-white dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-black"
+            ui.button(self.t("refresh"), on_click=self.on_refresh, icon="refresh").classes(
+                "w-full mt-auto bg-slate-700 hover:bg-slate-600 text-white "
+                "dark:bg-gray-200 dark:hover:bg-gray-300 dark:text-black"
             )
