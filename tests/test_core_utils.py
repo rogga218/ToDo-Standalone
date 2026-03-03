@@ -1,10 +1,12 @@
-import pytest
 import os
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
+import pytest
 from fastapi import FastAPI
+
+from src.backend_app import create_default_persons, lifespan
 from src.config import Settings
 from src.database import get_session
-from src.backend_app import lifespan, create_default_persons
 
 
 # -----------------

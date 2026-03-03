@@ -1,8 +1,9 @@
-from unittest.mock import MagicMock, patch
-from src.ui.components.dialogs import TodoDialog, PersonDialog
-from src.models import Person
-from uuid import uuid4
 from datetime import date
+from unittest.mock import MagicMock, patch
+from uuid import uuid4
+
+from src.models import Person
+from src.ui.components.dialogs import PersonDialog, TodoDialog
 
 
 def test_todo_dialog_edit_data_handling():

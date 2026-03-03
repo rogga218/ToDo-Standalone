@@ -1,8 +1,10 @@
-import pytest
-from unittest.mock import AsyncMock, MagicMock, patch
 import uuid
-from src.ui.controller import ToDoController
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
 from src.models import TodoRead
+from src.ui.controller import ToDoController
 
 
 @pytest.fixture

@@ -1,14 +1,16 @@
-import pytest
-from sqlmodel import SQLModel, Session, create_engine
-from sqlalchemy.pool import StaticPool
-from typing import Generator
 import os
 from datetime import datetime
-from fastapi.testclient import TestClient
+from typing import Generator
+
+import pytest
 from fastapi import FastAPI
-from src.routers import persons, todos, ai
-from src.database import get_session
+from fastapi.testclient import TestClient
+from sqlalchemy.pool import StaticPool
+from sqlmodel import Session, SQLModel, create_engine
+
 import src.models  # noqa: F401  # Required for SQLModel metadata to register the tables
+from src.database import get_session
+from src.routers import ai, persons, todos
 
 # Use an in-memory SQLite database for tests
 TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -103,8 +105,9 @@ def pytest_terminal_summary(terminalreporter, exitstatus, config):
 
             # Try to append the coverage report
             try:
-                from coverage import Coverage
                 import io
+
+                from coverage import Coverage
 
                 cov = Coverage()
                 cov.load()

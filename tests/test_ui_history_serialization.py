@@ -1,8 +1,9 @@
-from unittest.mock import MagicMock
-from src.ui.pages.history import HistoryView
-from src.models import Person, TodoRead
-from uuid import uuid4
 from datetime import date
+from unittest.mock import MagicMock
+from uuid import uuid4
+
+from src.models import Person, TodoRead
+from src.ui.pages.history import HistoryView
 
 
 def test_history_view_serialization():

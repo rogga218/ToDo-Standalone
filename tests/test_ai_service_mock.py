@@ -1,10 +1,12 @@
 import uuid
 from unittest.mock import MagicMock, patch
+
 import pytest
-from src.services import ai_service, todo_service, person_service
-from src.models import TodoCreate, PersonCreate
-from sqlmodel import Session
 from fastapi import HTTPException
+from sqlmodel import Session
+
+from src.models import PersonCreate, TodoCreate
+from src.services import ai_service, person_service, todo_service
 
 
 # Mock response object

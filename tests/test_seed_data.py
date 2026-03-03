@@ -1,5 +1,7 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock, patch
+
 from sqlmodel import Session
+
 from src.seed_data import create_seed_data
 
 

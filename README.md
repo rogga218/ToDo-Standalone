@@ -112,7 +112,7 @@ This project has been refactored to specifically focus on a single, native Pytho
 
 ### Prerequisites
 
--   Python 3.13+
+-   Python 3.14+
 -   Podman or Docker - *For containerized run*
 
 ### Installation

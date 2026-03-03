@@ -1,8 +1,10 @@
-import pytest
 import uuid
 from unittest.mock import patch
-from src.ui.api_client import ApiClient
+
+import pytest
+
 from src.models import Person, Todo
+from src.ui.api_client import ApiClient
 
 
 @pytest.fixture

@@ -1,9 +1,11 @@
-from src.services import person_service
-from src.models import PersonCreate, Person
-from sqlmodel import Session
+import uuid
+
 import pytest
 from fastapi import HTTPException
-import uuid
+from sqlmodel import Session
+
+from src.models import Person, PersonCreate
+from src.services import person_service
 
 
 def test_create_person(session: Session):
@@ -42,8 +44,8 @@ def test_delete_person_with_todos_fails(session: Session):
 
     # Manually adding a Todo via service would require importing todo_service
     # To avoid circular imports in tests or complexity, we can use the model directly or valid service call
-    from src.services import todo_service
     from src.models import TodoCreate
+    from src.services import todo_service
 
     todo_service.create_todo(
         session, TodoCreate(title="Task", description="Desc", person_id=p.id)

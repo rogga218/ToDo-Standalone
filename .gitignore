@@ -73,6 +73,8 @@ Desktop.ini
 
 # Project Specific
 *.db
+*.db-shm
+*.db-wal
 testreport/
 todo.db
 

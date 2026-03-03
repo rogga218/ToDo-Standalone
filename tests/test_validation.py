@@ -1,8 +1,10 @@
-import pytest
-from src.models import PersonCreate, TodoCreate, TodoUpdate
-from pydantic import ValidationError
 import uuid
 from datetime import date
+
+import pytest
+from pydantic import ValidationError
+
+from src.models import PersonCreate, TodoCreate, TodoUpdate
 
 # --- Person Validation Tests ---
 
@@ -31,7 +33,10 @@ def test_person_name_invalid_chars():
 
 
 def test_person_name_valid_chars():
-    """Test allowed characters (dots not allowing based on regex in models.py which allows letters, spaces, hyphens, apostrophes)."""
+    """
+    Test allowed characters (dots not allowing based on regex in models.py
+    which allows letters, spaces, hyphens, apostrophes).
+    """
     # Regex: ^[a-zA-Z\u00C0-\u00FF][a-zA-Z\u00C0-\u00FF \-\']*[a-zA-Z\u00C0-\u00FF]$
     p = PersonCreate(name="Bo-Goran")
     assert p.name == "Bo-Goran"

@@ -1,6 +1,7 @@
-from src.services import todo_service, person_service
-from src.models import TodoCreate, PersonCreate, SubtaskCreate
 from sqlmodel import Session
+
+from src.models import PersonCreate, SubtaskCreate, TodoCreate
+from src.services import person_service, todo_service
 
 
 def test_get_todos_filtering(session: Session):

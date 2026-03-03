@@ -1,8 +1,10 @@
-from src.services import todo_service
-from src.models import TodoCreate, Person
-from sqlmodel import Session
-import pytest
 import uuid
+
+import pytest
+from sqlmodel import Session
+
+from src.models import Person, TodoCreate
+from src.services import todo_service
 
 
 def test_create_todo(session: Session):
@@ -77,6 +79,7 @@ def test_create_todo_person_not_found(session: Session):
 
 def test_update_todo_not_found(session: Session):
     from fastapi import HTTPException
+
     from src.models import TodoUpdate
 
     with pytest.raises(HTTPException) as excinfo:
@@ -96,6 +99,7 @@ def test_delete_todo_not_found(session: Session):
 
 def test_create_subtask_not_found(session: Session):
     from fastapi import HTTPException
+
     from src.models import SubtaskCreate
 
     with pytest.raises(HTTPException) as excinfo:
