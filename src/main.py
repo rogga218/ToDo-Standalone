@@ -35,6 +35,22 @@ try:
     def health_check():
         return {"status": "ok"}
 
+    if os.environ.get("ENABLE_TEST_SHUTDOWN") == "1":
+
+        @app.get("/internal/shutdown")
+        def shutdown_test_server():
+            import _thread
+            import threading
+            import time
+
+            def _kill():
+                time.sleep(0.5)
+                # Terminate main thread properly so coverage 'atexit' triggers
+                _thread.interrupt_main()
+
+            threading.Thread(target=_kill, daemon=True).start()
+            return {"status": "shutting down"}
+
     def create_default_persons():
         with Session(engine) as session:
             if not session.exec(select(Person)).first():
@@ -79,70 +95,53 @@ try:
     # Native Mode settings for Executable
     if getattr(sys, "frozen", False):
         import atexit
+        import socket
+        import threading
 
-        args["native"] = True
+        # Find an open port dynamically
+        sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        sock.bind(("127.0.0.1", 0))
+        port = sock.getsockname()[1]
+        sock.close()
+
+        args["native"] = False  # DO NOT use pywebview to avoid Python 3.14 crashes
         args["reload"] = False  # Critical for frozen apps
-        args["port"] = None  # type: ignore # Let NiceGUI pick a random free port
-
-        @app.on_startup
-        def setup_native_window():
-            """Maximize window and start shutdown watchdog after startup."""
-            import asyncio
-
-            async def _do_maximize():
-                await asyncio.sleep(0.5)
-                try:
-                    app.native.main_window.maximize()  # type: ignore[union-attr]
-                except Exception:
-                    pass
-
-            asyncio.get_event_loop().create_task(_do_maximize())
-
-            # Start a watchdog that monitors pywebview windows directly.
-            # This is independent of NiceGUI's event system which can be
-            # unreliable for on_shutdown in native mode.
-            import threading
-            import time
-
-            def _shutdown_watchdog():
-                try:
-                    import webview  # pywebview's module
-
-                    # Phase 1: Wait for window(s) to be created
-                    timeout = 30  # Max wait for window creation
-                    elapsed = 0.0
-                    while not webview.windows and elapsed < timeout:
-                        time.sleep(0.5)
-                        elapsed += 0.5
-
-                    if not webview.windows:
-                        return  # No window was ever created, abort
-
-                    # Phase 2: Wait for all windows to close
-                    while webview.windows:
-                        time.sleep(0.5)
-                except Exception:
-                    return
-
-                # All pywebview windows are gone — force cleanup
-                time.sleep(1)  # Brief grace period
-                shutdown_cleanup(logger)
-                os._exit(0)
-
-            threading.Thread(target=_shutdown_watchdog, daemon=True, name="shutdown-watchdog").start()
+        args["port"] = port
+        args["show"] = False  # PySide6 will handle window creation
 
         # Register atexit as safety net for process cleanup
         atexit.register(lambda: shutdown_cleanup(logger))
 
     # Only run the app if this is the main process
     if __name__ in {"__main__", "__mp_main__"}:
-        ui.run(**args)
-
-        # Ensure process terminates after UI closes
         if getattr(sys, "frozen", False):
+            # Run NiceGUI/FastAPI in a background thread
+            threading.Thread(target=ui.run, kwargs=args, daemon=True).start()
+
+            # Initialize PySide6 UI on the main thread
+            from PySide6.QtCore import QUrl
+            from PySide6.QtWebEngineWidgets import QWebEngineView
+            from PySide6.QtWidgets import QApplication, QMainWindow
+
+            qt_app = QApplication(sys.argv)
+            window = QMainWindow()
+            window.setWindowTitle(settings.APP_NAME)
+
+            web_view = QWebEngineView()
+            web_view.load(QUrl(f"http://127.0.0.1:{args['port']}"))
+            window.setCentralWidget(web_view)
+
+            window.showMaximized()
+            qt_app.exec()  # Block here until the user closes the PyQt Window
+
+            # Ensure process terminates cleanly after UI closes
             shutdown_cleanup(logger)
             os._exit(0)
+        else:
+            ui.run(**args)
 
-
+except KeyboardInterrupt:
+    # Graceful exit for coverage and manual stops
+    sys.exit(0)
 except BaseException as e:
     handle_fatal_error(e)

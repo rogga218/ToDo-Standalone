@@ -22,9 +22,7 @@ def test_config_frozen_path():
     ):
         db_url = settings.get_db_url()
         # Verify it resolves database to the executable's directory
-        expected_path = os.path.join(
-            "/fake/exec/path", settings.SQLITE_FILE_NAME
-        ).replace("\\", "/")
+        expected_path = os.path.join("/fake/exec/path", settings.SQLITE_FILE_NAME).replace("\\", "/")
         # Cross platform SQLite URL normalization
         assert expected_path in db_url.replace("\\", "/")
 

@@ -25,17 +25,13 @@ def test_history_view_serialization():
     mock_restore = MagicMock()
 
     # Init View
-    view = HistoryView(
-        todos=[todo], persons=[person], on_delete=mock_delete, on_restore=mock_restore
-    )
+    view = HistoryView(todos=[todo], persons=[person], on_delete=mock_delete, on_restore=mock_restore)
 
     # Replicate render logic to verify serialization
     completed_todos = [t for t in view.todos if t.completed]
     rows = []
     for t in completed_todos:
-        person_name = next(
-            (p.name for p in view.persons if str(p.id) == str(t.person_id)), "?"
-        )
+        person_name = next((p.name for p in view.persons if str(p.id) == str(t.person_id)), "?")
         rows.append(
             {
                 "id": str(t.id),

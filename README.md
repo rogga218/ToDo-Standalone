@@ -15,7 +15,7 @@ This project has been refactored to specifically focus on a single, native Pytho
 ## Features
 
 -   **Container First Deployment**: Optimized for Podman/Docker orchestrations for seamless, isolated hosting.
--   **Bonus: Standalone Desktop App**: Can be packaged as a maximized native OS window (via `pywebview`) for local desktop setups without requiring a server.
+-   **Bonus: Standalone Desktop App**: Can be packaged as a maximized native OS window (via `PySide6` and background threading) for local desktop setups without requiring a server.
 -   **Native Python UI**: Fast and reactive interfaces built with [NiceGUI](https://nicegui.io).
 -   **Integrated Architecture**: FastAPI and business logic run directly within the same process—eliminating internal HTTP network overhead.
 -   **Zero-Config Database**: Uses a local SQLite database file (`todo.db`) for immediate out-of-the-box usage.
@@ -33,7 +33,7 @@ This project has been refactored to specifically focus on a single, native Pytho
 -   **AI Engine**: Google Generative AI (Gemini)
 
 ### Desktop Integration & Build
--   **Native Window Edge**: `pywebview`
+-   **Native Window Edge**: `PySide6` (QtWebEngineView)
 -   **Process Management**: `psutil`
 -   **Executable Bundle**: PyInstaller
 
@@ -55,6 +55,7 @@ This project has been refactored to specifically focus on a single, native Pytho
 ├── README.md                             # Project documentation
 ├── pyproject.toml                        # Project configuration
 ├── requirements.txt                      # Dependencies
+├── requirements-build.txt                # Desktop EXE Compiling Dependencies
 ├── scripts/                              # Utility scripts
 │   └── generate_secret.py                # Secret generator utility
 ├── src/
@@ -93,6 +94,10 @@ This project has been refactored to specifically focus on a single, native Pytho
 │       └── translations.py               # Localization (EN/SV)
 └── tests/                                # Automated tests
     ├── conftest.py                       # Fixtures & Reporting
+    ├── gui/                              # GUI Tests (Playwright)
+    │   ├── conftest.py                   # GUI test subprocess fixtures
+    │   ├── coverage_wrapper.py           # Subprocess coverage tracking
+    │   └── test_app_gui.py               # E2E test suite
     ├── test_ai_service_mock.py           # AI Mock tests
     ├── test_api_client.py                # Integration tests
     ├── test_core.py                      # Core utilities & process tests
@@ -141,7 +146,7 @@ Create a `.env` file in the root directory (use `.env.example` as a template).
 
 | Variable | Description | Default |
 | :--- | :--- | :--- |
-| `DATABASE_URL` | Database connection string | `sqlite:///todo.db` |
+| `DATABASE_URL` | Database connection string | `sqlite:///data/todo.db` |
 | `GEMINI_API_KEY` | API Key for AI features | `None` |
 | `STORAGE_SECRET` | Secret for session encryption | `random_secret_for_session_encryption` |
 | `PORT` | Local dev port | `8080` |
@@ -165,13 +170,19 @@ The app will be available at [http://localhost:8080](http://localhost:8080).
 
 To package the application as a standalone `.exe` file (Windows):
 
-1.  **Run the Build Script**:
+1.  **Install Build Dependencies**:
+    The main project dependencies are intentionally kept lightweight. To build the `.exe`, install the extra PySide6 and PyInstaller compiler wheels.
+    ```bash
+    pip install -r requirements-build.txt
+    ```
+
+2.  **Run the Build Script**:
     ```bash
     python build.py
     ```
-    This script will install `pyinstaller` (if missing) and package the app into the `dist/` folder.
+    This script will package the app routing a headless FastAPI to an insulated PySide6 application window into the `dist/` folder.
 
-2.  **Run the Executable**:
+3.  **Run the Executable**:
     Locate `dist/ToDoApp.exe` and run it. The database `todo.db` will be created in the same folder.
 
 ### Development Mode
@@ -196,18 +207,33 @@ The test suite includes:
 
 To run the automated test suite using `pytest`:
 
-**With Podman/Docker:**
+**Run Unit Tests Only (Default for CI):**
+
+*With Podman/Docker:*
+```bash
+podman-compose run --rm app pytest -m "not gui"
+```
+
+*Locally:*
+```bash
+pytest -m "not gui"
+```
+
+**Run GUI Tests Only (locally only):**
+
+```bash
+pytest -m gui
+```
+
+**Run All Tests (Unit + GUI):**
+
+*With Podman/Docker (GUI tests will be skipped if no browser is available in the container):*
 ```bash
 podman-compose run --rm app pytest
 ```
-```bash
-docker-compose run --rm app pytest
-```
 
-**Locally:**
+*Locally:*
 ```bash
-# Ensure test dependencies are installed
-pip install -r requirements.txt
 pytest
 ```
 

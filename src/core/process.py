@@ -5,13 +5,20 @@ import sys
 def init_crash_logging():
     """
     Polyfill for PyInstaller --windowed mode where sys.stdout/stderr are None.
-    This prevents Uvicorn logging from crashing on 'isatty' checks.
+    This prevents Uvicorn logging from crashing on 'isatty' checks,
+    and prevents multiprocessing spawn from failing with WinError 5 on sys.stdin.
     """
     if getattr(sys, "frozen", False):
-        if sys.stdout is None:
-            sys.stdout = open(os.devnull, "w")
-        if sys.stderr is None:
-            sys.stderr = open(os.devnull, "w")
+        # We must use raw OS file descriptors so Windows DuplicateHandle doesn't crash Python
+        # when multiprocessing spawn tries to inherit standard streams.
+        null_fd = os.open(os.devnull, os.O_RDWR)
+
+        if getattr(sys, "stdin", None) is None:
+            sys.stdin = open(null_fd, "r", closefd=False)
+        if getattr(sys, "stdout", None) is None:
+            sys.stdout = open(null_fd, "w", closefd=False)
+        if getattr(sys, "stderr", None) is None:
+            sys.stderr = open(null_fd, "w", closefd=False)
 
 
 def log_crash(e):
@@ -27,11 +34,13 @@ def log_crash(e):
 
         log_path = os.path.join(base_path, "crash.log")
 
-        with open(log_path, "w") as f:
+        with open(log_path, "a") as f:
+            import datetime
             import traceback
 
+            f.write(f"\n--- Crash at {datetime.datetime.now()} in PID {os.getpid()} ---\n")
             traceback.print_exc(file=f)
-            f.write(f"\nError: {e}")
+            f.write(f"\nError: {e}\n")
 
         print(f"Crash log saved to: {log_path}")
     except Exception as log_err:

@@ -25,7 +25,7 @@ def build_executable():
         ]
     )
     subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements.txt"])
-    subprocess.check_call([sys.executable, "-m", "pip", "install", "--upgrade", "pyinstaller"])
+    subprocess.check_call([sys.executable, "-m", "pip", "install", "-r", "requirements-build.txt"])
 
     # Import config AFTER installing dependencies
     try:
@@ -138,8 +138,6 @@ def build_executable():
         else:
             print("No logo.ico, logo.svg, or logo.png found. Build will proceed without an icon.")
 
-    # PyInstaller Command
-    # Use python -m PyInstaller to ensure we use the installed module in current env
     cmd = [
         sys.executable,
         "-m",
@@ -162,6 +160,12 @@ def build_executable():
         "pydantic_settings",
         "--hidden-import",
         "python_multipart",  # Correct module name with underscore
+        "--hidden-import",
+        "_cffi_backend",
+        "--hidden-import",
+        "cffi",
+        "--hidden-import",
+        "PySide6.QtWebEngineWidgets",
         str(main_script),
     ] + icon_argument
 

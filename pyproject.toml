@@ -4,6 +4,9 @@ asyncio_mode = "auto"
 asyncio_default_fixture_loop_scope = "function"
 testpaths = ["tests"]
 addopts = "-v --cov=src --cov-fail-under=65 --cov-report=term-missing"
+markers = [
+    "gui: marks tests as GUI tests requiring Playwright (deselect with '-m \"not gui\"')"
+]
 
 [tool.coverage.run]
 omit = ["src/main.py", "src/ui/routes.py"]

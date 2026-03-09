@@ -18,9 +18,7 @@ class MockGeminiResponse:
 def test_generate_subtasks_success(session: Session):
     # Setup data
     p = person_service.create_person(session, PersonCreate(name="AI User"))
-    todo = todo_service.create_todo(
-        session, TodoCreate(title="Plan Party", description="Big party", person_id=p.id)
-    )
+    todo = todo_service.create_todo(session, TodoCreate(title="Plan Party", description="Big party", person_id=p.id))
 
     # Mock settings to return API Key
     with patch("src.services.ai_service.get_settings") as mock_settings:
@@ -33,10 +31,8 @@ def test_generate_subtasks_success(session: Session):
 
             # Setup response
             expected_subtasks = ["Buy chips", "Invite friends", "Clean house"]
-            mock_client_instance.models.generate_content.return_value = (
-                MockGeminiResponse(
-                    text=f"```json\n{str(expected_subtasks).replace("'", '"')}\n```"
-                )
+            mock_client_instance.models.generate_content.return_value = MockGeminiResponse(
+                text=f"```json\n{str(expected_subtasks).replace("'", '"')}\n```"
             )
 
             # Call service
@@ -51,9 +47,7 @@ def test_generate_subtasks_success(session: Session):
 def test_generate_subtasks_no_api_key(session: Session):
     # Setup data
     p = person_service.create_person(session, PersonCreate(name="NoKey User"))
-    todo = todo_service.create_todo(
-        session, TodoCreate(title="Task", description="Desc", person_id=p.id)
-    )
+    todo = todo_service.create_todo(session, TodoCreate(title="Task", description="Desc", person_id=p.id))
 
     with patch("src.services.ai_service.get_settings") as mock_settings:
         mock_settings.return_value.GEMINI_API_KEY = None

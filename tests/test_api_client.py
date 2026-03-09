@@ -18,9 +18,7 @@ async def test_get_todos(mock_run_db, client):
     todo_id = uuid.uuid4()
     person_id = uuid.uuid4()
     # Mock service returning SQLModel Todo objects
-    mock_run_db.return_value = [
-        Todo(id=todo_id, title="Test", description="Test Desc", person_id=person_id)
-    ]
+    mock_run_db.return_value = [Todo(id=todo_id, title="Test", description="Test Desc", person_id=person_id)]
 
     result = await client.get_todos()
     assert len(result) == 1
@@ -93,9 +91,7 @@ async def test_delete_todo(mock_run_db, client):
 @patch("src.ui.api_client.run_db")
 async def test_generate_subtasks(mock_run_db, client):
     # Mocking the AI service returning a Todo
-    mock_todo = Todo(
-        id=uuid.uuid4(), title="Gen", description="Gen Desc", person_id=uuid.uuid4()
-    )
+    mock_todo = Todo(id=uuid.uuid4(), title="Gen", description="Gen Desc", person_id=uuid.uuid4())
     mock_run_db.return_value = mock_todo
     res = await client.generate_subtasks(str(uuid.uuid4()))
     assert res["success"] is True

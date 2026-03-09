@@ -62,9 +62,7 @@ async def test_controller_rendering_and_actions(
     on_generate_subtasks = board_kwargs["on_generate_subtasks"]
 
     # Dummy TodoRead data
-    dummy_todo = TodoRead(
-        id=uuid.uuid4(), title="Test", description="Test Desc", person_id=uuid.uuid4()
-    )
+    dummy_todo = TodoRead(id=uuid.uuid4(), title="Test", description="Test Desc", person_id=uuid.uuid4())
 
     # Test on_update callback
     mock_api.update_todo = AsyncMock(return_value={"success": True})
@@ -96,9 +94,7 @@ async def test_controller_rendering_and_actions(
     mock_api.generate_subtasks.assert_awaited_once()
 
     # Test on_generate_subtasks failure path
-    mock_api.generate_subtasks = AsyncMock(
-        return_value={"success": False, "error": "err"}
-    )
+    mock_api.generate_subtasks = AsyncMock(return_value={"success": False, "error": "err"})
     await on_generate_subtasks(dummy_todo)
 
     # Switch to history view to extract its unique callbacks

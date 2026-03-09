@@ -34,9 +34,7 @@ def test_person_routes(client):
     # We must quickly create a person and a todo
     p_res = client.post("/persons/", json={"name": "Owner"})
     p_id = p_res.json()["id"]
-    client.post(
-        "/todos/", json={"title": "Test", "description": "Desc", "person_id": p_id}
-    )
+    client.post("/todos/", json={"title": "Test", "description": "Desc", "person_id": p_id})
     del_res = client.delete(f"/persons/{p_id}")
     assert del_res.status_code == 400
 
@@ -94,9 +92,7 @@ def test_todo_routes(client):
     assert g_err.status_code == 404
 
     # Error: Path non-existent
-    p_err = client.patch(
-        "/todos/00000000-0000-0000-0000-000000000000", json={"completed": True}
-    )
+    p_err = client.patch("/todos/00000000-0000-0000-0000-000000000000", json={"completed": True})
     assert p_err.status_code == 404
 
 
@@ -129,9 +125,7 @@ def test_subtask_routes(client):
     assert err_del.status_code == 404
 
     # Error: Update non-existent
-    err_upd = client.patch(
-        "/subtasks/00000000-0000-0000-0000-000000000000?completed=true"
-    )
+    err_upd = client.patch("/subtasks/00000000-0000-0000-0000-000000000000?completed=true")
     assert err_upd.status_code == 404
 
 

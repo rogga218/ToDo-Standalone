@@ -47,9 +47,7 @@ def test_delete_person_with_todos_fails(session: Session):
     from src.models import TodoCreate
     from src.services import todo_service
 
-    todo_service.create_todo(
-        session, TodoCreate(title="Task", description="Desc", person_id=p.id)
-    )
+    todo_service.create_todo(session, TodoCreate(title="Task", description="Desc", person_id=p.id))
 
     with pytest.raises(HTTPException) as excinfo:
         person_service.delete_person(session, str(p.id))

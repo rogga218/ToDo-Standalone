@@ -11,11 +11,11 @@ services:
       - ./src:/app/src  # Hot reloading for code
       - ./tests:/app/tests # Tests
       - ./pyproject.toml:/app/pyproject.toml # Config
-      - ./todo.db:/app/todo.db # Persist SQLite db
+      - ./data:/app/data # Mount full directory for SQLite WAL mode compatibility
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
-      - DATABASE_URL=sqlite:///todo.db
+      - DATABASE_URL=sqlite:///data/todo.db
       - TZ=Europe/Stockholm
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8080/health').getcode() == 200 else 1)"]

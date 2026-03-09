@@ -3,6 +3,11 @@ from unittest.mock import MagicMock, patch
 
 import pytest
 
+try:
+    import psutil  # noqa: F401
+except ImportError:
+    sys.modules["psutil"] = MagicMock()
+
 from src.core.errors import handle_fatal_error
 from src.core.process import init_crash_logging, log_crash, shutdown_cleanup
 

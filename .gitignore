@@ -77,6 +77,8 @@ Desktop.ini
 *.db-wal
 testreport/
 todo.db
+data/
+crash.log
 
 # Temp Scratchpad
 temp/

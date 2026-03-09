@@ -26,4 +26,4 @@ jobs:
         
     - name: Test with pytest
       run: |
-        pytest -v --cov=src --cov-fail-under=65 --cov-report=term-missing
+        pytest -v -m "not gui" --cov=src --cov-fail-under=65 --cov-report=term-missing
