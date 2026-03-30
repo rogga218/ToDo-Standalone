@@ -85,20 +85,10 @@ class ApiClient:
             err_msg = _format_error(e)
             return {"success": False, "error": err_msg}
 
-    async def update_todo(self, todo: Dict[str, Any]) -> Dict[str, Any]:
+    async def update_todo(self, todo_id: str, update_data: TodoUpdate) -> Dict[str, Any]:
         try:
-            tid = uuid.UUID(str(todo["id"]))
-            allowed_fields = {
-                "title",
-                "description",
-                "completed",
-                "priority",
-                "deadline",
-                "person_id",
-            }
-            filtered_data = {k: v for k, v in todo.items() if k in allowed_fields}
-            t_update = TodoUpdate(**filtered_data)
-            await run_db(todo_service.update_todo, tid, t_update)
+            tid = uuid.UUID(str(todo_id))
+            await run_db(todo_service.update_todo, tid, update_data)
             return {"success": True}
         except Exception as e:
             logger.error(f"Error updating todo: {e}", exc_info=True)

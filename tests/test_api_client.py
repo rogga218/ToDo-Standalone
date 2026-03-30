@@ -3,7 +3,7 @@ from unittest.mock import patch
 
 import pytest
 
-from src.models import Person, Todo
+from src.models import Person, Todo, TodoUpdate
 from src.ui.api_client import ApiClient
 
 
@@ -70,13 +70,13 @@ async def test_create_todo(mock_run_db, client):
 @pytest.mark.asyncio
 @patch("src.ui.api_client.run_db")
 async def test_update_todo(mock_run_db, client):
-    todo_data = {
-        "id": str(uuid.uuid4()),
-        "completed": True,
-        "title": "Updated",
-        "description": "Updated",
-    }
-    res = await client.update_todo(todo_data)
+    todo_id = str(uuid.uuid4())
+    update_data = TodoUpdate(
+        completed=True,
+        title="Updated",
+        description="Updated",
+    )
+    res = await client.update_todo(todo_id, update_data)
     assert res["success"] is True
 
 
@@ -126,7 +126,7 @@ async def test_api_client_exception_handling(mock_run_db, client):
     assert res["success"] is False
     assert "error" in res
 
-    res2 = await client.update_todo({"id": str(uuid.uuid4())})
+    res2 = await client.update_todo(str(uuid.uuid4()), TodoUpdate(title="Fail"))
     assert res2["success"] is False
 
     assert (await client.delete_person(str(uuid.uuid4())))["success"] is False

@@ -1,9 +1,9 @@
 from datetime import date, timedelta
-from typing import Callable, Dict, List, Optional
+from typing import Callable, List, Optional
 
 from nicegui import ui
 
-from src.models import Person, TodoRead
+from src.models import Person, TodoRead, TodoUpdate
 from src.ui.api_client import api
 from src.ui.translations import get_text
 
@@ -135,23 +135,23 @@ class TodoDialog:
     def create(self):
         self._render_dialog(self.t("dialog_new_todo"))
 
-    def edit(self, todo: Dict):
+    def edit(self, todo: TodoRead):
         self._render_dialog(self.t("dialog_edit_todo"), todo)
 
-    def _render_dialog(self, title_text: str, todo: Optional[Dict] = None):
+    def _render_dialog(self, title_text: str, todo: Optional[TodoRead] = None):
         with ui.dialog() as dialog, ui.card().classes("w-96"):
             ui.label(title_text).classes("text-xl font-bold")
 
-            initial_title = todo["title"] if todo else ""
-            initial_desc = todo.get("description", "") if todo else ""
-            initial_person = todo.get("person_id") if todo else None
-            initial_prio = todo.get("priority", 2) if todo else 2
+            initial_title = todo.title if todo else ""
+            initial_desc = todo.description if todo else ""
+            initial_person = todo.person_id if todo else None
+            initial_prio = todo.priority if todo else 2
 
-            if todo:
-                initial_deadline = todo.get("deadline")
+            if todo and todo.deadline:
+                deadline_str = todo.deadline.isoformat() if isinstance(todo.deadline, date) else str(todo.deadline)
             else:
                 # Default to tomorrow
-                initial_deadline = (date.today() + timedelta(days=1)).isoformat()
+                deadline_str = (date.today() + timedelta(days=1)).isoformat()
 
             title_input = ui.input(self.t("title_label"), value=initial_title).classes("w-full").props("maxlength=50")
             desc_input = ui.textarea(self.t("desc_label"), value=initial_desc).classes("w-full").props("maxlength=500")
@@ -179,7 +179,7 @@ class TodoDialog:
             deadline_input = ui.input(
                 self.t("deadline_label"),
                 placeholder="YYYY-MM-DD",
-                value=initial_deadline or "",
+                value=deadline_str,
             ).classes("w-full")
             with ui.dialog() as date_picker, ui.card():
 
@@ -202,22 +202,32 @@ class TodoDialog:
                     ui.notify(self.t("desc_required"), type="negative")
                     return
 
-                payload = {
-                    "title": title_input.value,
-                    "description": desc_input.value,
-                    "person_id": person_select.value,
-                    "priority": priority_select.value,
-                    "deadline": deadline_input.value or None,
-                }
-
                 if todo:
                     # Update
-                    full_payload = todo.copy()
-                    full_payload.update(payload)
-                    res = await api.update_todo(full_payload)
+                    # Parse deadline string to date object for type safety
+                    d_parsed = date.fromisoformat(deadline_input.value) if deadline_input.value else None
+
+                    update_data = TodoUpdate(
+                        title=title_input.value,
+                        description=desc_input.value,
+                        person_id=person_select.value,
+                        priority=priority_select.value,
+                        deadline=d_parsed,
+                    )
+                    res = await api.update_todo(str(todo.id), update_data)
                 else:
                     # Create
-                    payload["completed"] = False
+                    # Parse deadline string to date object for type safety
+                    d_parsed = date.fromisoformat(deadline_input.value) if deadline_input.value else date.today()
+
+                    payload = {
+                        "title": title_input.value,
+                        "description": desc_input.value,
+                        "person_id": person_select.value,
+                        "priority": priority_select.value,
+                        "deadline": d_parsed,
+                        "completed": False,
+                    }
                     res = await api.create_todo(payload)
 
                 if res["success"]:

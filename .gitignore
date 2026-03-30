@@ -82,3 +82,8 @@ crash.log
 
 # Temp Scratchpad
 temp/
+
+# OpenSpec (Added temporarily)
+.agent/
+openspec/
+

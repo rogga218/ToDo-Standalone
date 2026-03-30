@@ -1,3 +1,4 @@
+import re
 import uuid
 from datetime import date, datetime, timedelta, timezone
 from typing import List, Optional
@@ -51,7 +52,6 @@ class PersonCreate(PersonBase):
         # Allows: Letters, Spaces, Hyphens, Apostrophes.
         # Must start with a letter.
         # \u00C0-\u00FF covers common accented characters (Latin-1 Supplement)
-        import re
 
         pattern = r"^[a-zA-Z\u00C0-\u00FF][a-zA-Z\u00C0-\u00FF \-\']+$"
 

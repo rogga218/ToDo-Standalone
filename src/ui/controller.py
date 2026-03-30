@@ -1,9 +1,9 @@
 import asyncio
-from typing import List
+from typing import List, Optional
 
 from nicegui import app, ui
 
-from src.models import Person, TodoRead
+from src.models import Person, TodoRead, TodoUpdate
 from src.ui.api_client import api
 from src.ui.components.dialogs import PersonDialog, TodoDialog
 from src.ui.layout import Layout
@@ -13,24 +13,24 @@ from src.ui.translations import get_text
 
 
 class ToDoController:
-    def __init__(self):
+    def __init__(self) -> None:
         self.todos: List[TodoRead] = []
         self.persons: List[Person] = []
-        self.content_container = None
-        self.layout_component = None
-        self.language = "sv"
+        self.content_container: Optional[ui.column] = None
+        self.layout_component: Optional[Layout] = None
+        self.language: str = "sv"
 
-    def t(self, key: str, *args) -> str:
+    def t(self, key: str, *args: object) -> str:
         text = get_text(key, self.language)
         if args:
             return text.format(*args)
         return text
 
-    async def initialize(self):
+    async def initialize(self) -> None:
         """Initial data fetch."""
         self.todos, self.persons = await asyncio.gather(api.get_todos(), api.get_persons())
 
-    async def refresh(self):
+    async def refresh(self) -> None:
         """Soft Refresh: Fetch new data and re-render content."""
         await self.initialize()
         await self.render_content(self.current_page_name, self.current_page_page_idx)
@@ -38,7 +38,7 @@ class ToDoController:
         # For now, we don't re-render sidebar on every refresh to avoid flicker,
         # but in a real reactive app we might want to.
 
-    async def render_layout(self, current_page: str, page_idx: int = 0):
+    async def render_layout(self, current_page: str, page_idx: int = 0) -> None:
         """Renders the main layout and sidebar."""
         self.current_page_name = current_page
         self.current_page_page_idx = page_idx
@@ -102,7 +102,7 @@ class ToDoController:
             self.content_container = ui.column().classes("w-full h-full p-0 gap-0")
             await self.render_content(current_page, page_idx)
 
-    async def render_content(self, current_page: str, page_idx: int = 0):
+    async def render_content(self, current_page: str, page_idx: int = 0) -> None:
         if not self.content_container:
             return
 
@@ -126,15 +126,10 @@ class ToDoController:
         with self.content_container:
             # Action Handlers
             async def on_update(todo: TodoRead):
-                # UI sends TodoRead object, but API expects dict for update_todo (for now)
-                # ApiClient.update_todo takes Dict. We can pass model_dump().
-                # But wait, ApiClient.update_todo logic: "todo['id']" -> UUID.
-                # If we pass object, we should update ApiClient or convert here.
-                # Let's convert here to minimize ApiClient perturbation for now,
-                # OR better: update ApiClient to accept TodoUpdate or similar.
-                # For quick fix: todo is TodoRead object.
-                payload = todo.model_dump()
-                res = await api.update_todo(payload)
+                # TodoRead contains extra fields like id and subtasks not allowed in TodoUpdate
+                update_dict = todo.model_dump(exclude={"id", "subtasks"})
+                update_data = TodoUpdate(**update_dict)
+                res = await api.update_todo(str(todo.id), update_data)
                 if res["success"]:
                     ui.notify(self.t("updated"), type="positive")
                     await self.refresh()
@@ -151,7 +146,7 @@ class ToDoController:
                 # To be safe and compliant with "Fix Warnings":
                 # I will convert to dict for the Dialog for now, or update Dialog.
                 # Updating Dialog is better.
-                d.edit(todo.model_dump())
+                d.edit(todo)
 
             async def on_delete(todo: TodoRead):
                 res = await api.delete_todo(str(todo.id))
@@ -165,9 +160,8 @@ class ToDoController:
                 # toggle completed
                 # todo is object.
                 # We need to construct payload for update.
-                payload = todo.model_dump()
-                payload["completed"] = False
-                res = await api.update_todo(payload)
+                update_data = TodoUpdate(completed=False)
+                res = await api.update_todo(str(todo.id), update_data)
                 if res["success"]:
                     ui.notify(self.t("updated"), type="positive")
                     await self.refresh()

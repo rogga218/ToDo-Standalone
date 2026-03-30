@@ -13,13 +13,13 @@ class BoardView:
         self,
         todos: List[TodoRead],
         persons: List[Person],
-        on_update: Callable,
-        on_edit: Callable,
-        on_delete: Callable,
-        on_generate_subtasks: Callable,
+        on_update: Callable[[TodoRead], Any],
+        on_edit: Callable[[TodoRead], Any],
+        on_delete: Callable[[TodoRead], Any],
+        on_generate_subtasks: Callable[[TodoRead], Any],
         page: int = 0,
         language: str = "sv",
-    ):
+    ) -> None:
         self.todos = todos
         self.persons = persons
         self.on_update = on_update
@@ -29,10 +29,10 @@ class BoardView:
         self.page = page
         self.language = language
 
-    def t(self, key):
+    def t(self, key: str) -> str:
         return get_text(key, self.language)
 
-    def render(self):
+    def render(self) -> None:
         from datetime import date
 
         today_date = date.today()
@@ -152,7 +152,7 @@ class BoardView:
                             for todo in items:
                                 self.render_card(todo)
 
-    def render_card(self, todo: TodoRead):
+    def render_card(self, todo: TodoRead) -> None:
         # Card Styling: "P1, P2" removal, colored relief
         prio_color_border = {
             1: "border-l-4 border-red-500",
@@ -241,7 +241,7 @@ class BoardView:
                     "flat dense size=sm round"
                 ).classes("text-red-600 dark:text-red-400").tooltip(self.t("delete"))
 
-    async def toggle_complete(self, todo: TodoRead):
+    async def toggle_complete(self, todo: TodoRead) -> None:
         # We need to send dictionary to update callback which eventually calls API
         # Or better update on_update to accept object
         # on_update in controller already accepts object.
@@ -264,7 +264,7 @@ class BoardView:
         todo.completed = not todo.completed
         await self.on_update(todo)
 
-    async def toggle_subtask(self, todo, subtask, completed):
+    async def toggle_subtask(self, todo: TodoRead, subtask: Any, completed: bool) -> None:
         await api.toggle_subtask(str(subtask.id), completed)
         # Refresh logic should be handled by parent re-render or explicit refresh
         # But for now we rely on the parent refreshing the data
