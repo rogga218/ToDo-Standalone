@@ -9,6 +9,7 @@ pytest-asyncio>=1.4.0
 pytest-cov>=7.1.0
 pytest-playwright>=0.5.1
 httpx>=0.28.1
+httpx2>=2.9.1
 
 # Development & Linting
 ruff>=0.16.1

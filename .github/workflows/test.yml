@@ -11,7 +11,7 @@ jobs:
     runs-on: ubuntu-latest
     
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v7
     
     - name: Set up Python 3.14
       uses: actions/setup-python@v5
@@ -24,6 +24,11 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r requirements.txt
         
+    - name: Run security vulnerability audit
+      run: |
+        pip install pip-audit
+        pip-audit -r requirements.txt
+
     - name: Test with pytest
       run: |
         pytest -v -m "not gui" --cov=src --cov-fail-under=65 --cov-report=term-missing

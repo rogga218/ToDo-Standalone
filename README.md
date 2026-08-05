@@ -264,6 +264,15 @@ ruff check src
 mypy src
 ```
 
+### Dependency Security Auditing
+
+To audit project dependencies for known security vulnerabilities:
+
+```bash
+pip-audit -r requirements.txt
+npm audit
+```
+
 ### Seeding Test Data
 
 You can populate the database with mock data (sample persons and todos) for testing purposes.

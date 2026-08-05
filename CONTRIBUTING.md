@@ -48,6 +48,8 @@ To set up your local development environment, please follow these steps:
    mypy src
    pytest -m "not gui"
    npx playwright test
+   pip-audit -r requirements.txt
+   npm audit
    ```
    *(Note: The project requires a minimum test coverage of 65% and 0 warnings.)*
 
