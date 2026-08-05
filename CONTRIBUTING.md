@@ -26,6 +26,7 @@ To set up your local development environment, please follow these steps:
 3. **Install dependencies**
    ```bash
    pip install -r requirements.txt
+   npm install
    ```
 
 4. **Set up environment variables**
@@ -45,9 +46,11 @@ To set up your local development environment, please follow these steps:
    ruff format src
    ruff check src
    mypy src
-   pytest
+   pytest -m "not gui"
+   npx playwright test
    ```
    *(Note: The project requires a minimum test coverage of 65% and 0 warnings.)*
+
 4. **Commit your changes**: Write clear, descriptive commit messages.
 5. **Push and open a PR**: Push your branch to GitHub and open a Pull Request against the `main` branch.
 

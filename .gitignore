@@ -24,6 +24,7 @@ MANIFEST
 
 # PyInstaller
 *.spec
+!TodoApp.spec
 
 # Unit test / coverage reports
 htmlcov/
@@ -87,3 +88,8 @@ temp/
 .agent/
 openspec/
 
+# Node & Playwright
+node_modules/
+playwright-report/
+test-results/
+blob-report/

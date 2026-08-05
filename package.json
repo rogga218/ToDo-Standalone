@@ -1,0 +1,28 @@
+{
+  "name": "todov2_0_standalone",
+  "version": "1.0.0",
+  "description": "![Python 3.14+](https://img.shields.io/badge/Python-3.14%2B-blue.svg?logo=python&logoColor=white)\r ![NiceGUI](https://img.shields.io/badge/UI-NiceGUI-green.svg)\r ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg?logo=fastapi&logoColor=white)\r ![SQLite](https://img.shields.io/badge/Database-SQLite-07405e.svg?logo=sqlite&logoColor=white)\r ![Docker/Podman](https://img.shields.io/badge/Container-Podman%20%7C%20Docker-2496ED.svg?logo=docker&logoColor=white)\r ![License MIT](https://img.shields.io/badge/License-MIT-yellow.svg)",
+  "main": "index.js",
+  "directories": {
+    "test": "tests"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/rogga218/ToDo-Standalone.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/rogga218/ToDo-Standalone/issues"
+  },
+  "homepage": "https://github.com/rogga218/ToDo-Standalone#readme",
+  "devDependencies": {
+    "@playwright/test": "^1.62.1",
+    "@types/node": "^26.1.2"
+  }
+}

@@ -26,7 +26,7 @@ def generate_subtasks(session: Session, todo_id: uuid.UUID) -> Todo:
         client = genai.Client(api_key=api_key)
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model=settings.GEMINI_MODEL,
             contents=f"""
         Bryt ner följande uppgift i 3-5 konkreta deluppgifter på Svenska.
         Uppgift: {todo.title}

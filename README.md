@@ -148,8 +148,10 @@ Create a `.env` file in the root directory (use `.env.example` as a template).
 | :--- | :--- | :--- |
 | `DATABASE_URL` | Database connection string | `sqlite:///data/todo.db` |
 | `GEMINI_API_KEY` | API Key for AI features | `None` |
+| `GEMINI_MODEL` | Gemini Model Alias | `gemini-flash-latest` |
 | `STORAGE_SECRET` | Secret for session encryption | `random_secret_for_session_encryption` |
 | `PORT` | Local dev port | `8080` |
+
 
 > **Tip:** To generate a secure `STORAGE_SECRET`, run `python scripts/generate_secret.py` and copy the output.
 
@@ -219,10 +221,23 @@ podman-compose run --rm app pytest -m "not gui"
 pytest -m "not gui"
 ```
 
-**Run GUI Tests Only (locally only):**
+**Run Python GUI Tests Only (Legacy):**
 
 ```bash
 pytest -m gui
+```
+
+**Run Node.js E2E Tests (Recommended):**
+
+We use Node-based Playwright for comprehensive end-to-end testing with UI Mode and Trace Viewer. Playwright will automatically start the backend server before testing.
+
+```bash
+npx playwright test
+```
+
+To debug tests visually:
+```bash
+npx playwright test --ui
 ```
 
 **Run All Tests (Unit + GUI):**

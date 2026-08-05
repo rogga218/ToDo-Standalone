@@ -86,6 +86,7 @@ try:
         "host": "0.0.0.0",  # Bind to all interfaces for Docker compatibility
         "port": settings.PORT,
         "title": settings.APP_NAME,
+        "favicon": os.path.join(settings.get_assets_path(), "logo.ico"),
         "dark": True,
         "storage_secret": settings.STORAGE_SECRET,
         "reload": settings.DEBUG,  # Enable auto-reload in debug mode
@@ -120,12 +121,17 @@ try:
 
             # Initialize PySide6 UI on the main thread
             from PySide6.QtCore import QUrl
+            from PySide6.QtGui import QIcon
             from PySide6.QtWebEngineWidgets import QWebEngineView
             from PySide6.QtWidgets import QApplication, QMainWindow
 
             qt_app = QApplication(sys.argv)
             window = QMainWindow()
             window.setWindowTitle(settings.APP_NAME)
+            icon_path = os.path.join(settings.get_assets_path(), "logo.ico")
+            if os.path.exists(icon_path):
+                window.setWindowIcon(QIcon(icon_path))
+
 
             web_view = QWebEngineView()
             web_view.load(QUrl(f"http://127.0.0.1:{args['port']}"))

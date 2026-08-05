@@ -1,0 +1,44 @@
+# Version control
+.git/
+.gitignore
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+.mypy_cache/
+.ruff_cache/
+.venv/
+venv/
+ENV/
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Project Specific
+data/
+*.db
+testreport/
+crash.log
+temp/
+build/
+dist/
+.agent/
+openspec/
+
+
+# Node & Playwright
+node_modules/
+playwright-report/
+test-results/
+blob-report/
