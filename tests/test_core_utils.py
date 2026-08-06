@@ -1,12 +1,8 @@
 import os
 from unittest.mock import MagicMock, patch
 
-import pytest
-from fastapi import FastAPI
-
-from src.backend_app import create_default_persons, lifespan
 from src.config import Settings
-from src.database import get_session
+from src.database import create_default_persons, get_session
 
 
 # -----------------
@@ -77,11 +73,8 @@ def test_get_session_yields():
         mock_session_class.assert_called_once()
 
 
-# -----------------
-# 3. Backend App Tests
-# -----------------
 def test_create_default_persons():
-    with patch("src.backend_app.Session") as mock_session_class:
+    with patch("src.database.Session") as mock_session_class:
         mock_session = MagicMock()
         mock_session_class.return_value.__enter__.return_value = mock_session
 
@@ -90,24 +83,6 @@ def test_create_default_persons():
 
         create_default_persons()
 
-        # We expect 3 people to be created (Roger, Bosse, Kalle)
+        # We expect 3 people to be created (TestPerson1, TestPerson2, TestPerson3)
         assert mock_session.add.call_count == 3
         mock_session.commit.assert_called_once()
-
-
-@pytest.mark.asyncio
-async def test_backend_lifespan():
-    dummy_app = FastAPI()
-
-    # Patch the real DB and initializers so we don't nuke actual files
-    with (
-        patch("src.backend_app.create_db_and_tables") as mock_create_db,
-        patch("src.backend_app.create_default_persons") as mock_create_users,
-    ):
-        # Execute the async context manager
-        async with lifespan(dummy_app):
-            pass
-
-        # Verify it initialized the core dependencies
-        mock_create_db.assert_called_once()
-        mock_create_users.assert_called_once()

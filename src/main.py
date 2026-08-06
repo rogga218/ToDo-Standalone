@@ -16,12 +16,10 @@ try:
         freeze_support()
 
     from nicegui import app, ui
-    from sqlmodel import Session, select
 
     from src.config import get_settings, logger
-    from src.database import create_db_and_tables, engine
-    from src.models import Person
-    from src.routers import ai, persons, todos
+    from src.database import create_db_and_tables, create_default_persons
+    from src.routers import ai, backup, persons, todos
     from src.ui.routes import setup_routes
 
     # --- Backend Setup ---
@@ -29,6 +27,7 @@ try:
     app.include_router(persons.router)
     app.include_router(todos.router)
     app.include_router(ai.router)
+    app.include_router(backup.router)
 
     # Health Check
     @app.get("/health")
@@ -50,15 +49,6 @@ try:
 
             threading.Thread(target=_kill, daemon=True).start()
             return {"status": "shutting down"}
-
-    def create_default_persons():
-        with Session(engine) as session:
-            if not session.exec(select(Person)).first():
-                logger.info("Seeding default persons...")
-                session.add(Person(name="TestPerson1"))
-                session.add(Person(name="TestPerson2"))
-                session.add(Person(name="TestPerson3"))
-                session.commit()
 
     @app.on_startup
     def on_startup():

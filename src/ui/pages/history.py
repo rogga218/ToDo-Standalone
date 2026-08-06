@@ -3,6 +3,7 @@ from typing import Callable, List, Optional
 from nicegui import ui
 
 from src.models import Person, TodoRead
+from src.ui.api_client import api
 from src.ui.translations import get_text
 
 
@@ -14,6 +15,7 @@ class HistoryView:
         on_delete: Callable,
         on_restore: Callable,
         on_bulk_delete: Optional[Callable] = None,
+        on_refresh: Optional[Callable] = None,
         language: str = "sv",
     ):
         self.todos = todos
@@ -21,6 +23,7 @@ class HistoryView:
         self.on_delete = on_delete
         self.on_restore = on_restore
         self.on_bulk_delete = on_bulk_delete
+        self.on_refresh = on_refresh
         self.language = language
 
     def t(self, key):
@@ -139,7 +142,42 @@ class HistoryView:
             table.on("restore", restore_row)
             table.on("delete", delete_row)
 
-            # Bulk Actions Logic
+            # Bulk & Backup Actions Logic
+            async def download_export(fmt: str):
+                res = await api.export_backup(fmt)
+                if res["success"]:
+                    ui.download(res["content"].encode("utf-8"), res["filename"])
+                else:
+                    ui.notify(res["error"], type="negative")
+
+            async def handle_upload(e):
+                try:
+                    file_obj = getattr(e, "file", None)
+                    if file_obj and hasattr(file_obj, "read"):
+                        file_bytes = await file_obj.read()
+                        file_name = getattr(file_obj, "name", "backup.json")
+                    elif hasattr(e, "content"):
+                        content_attr = getattr(e, "content")
+                        if hasattr(content_attr, "seek"):
+                            content_attr.seek(0)
+                        file_bytes = content_attr.read()
+                        file_name = getattr(e, "name", "backup.json")
+                    else:
+                        raise ValueError("Unsupported upload event format")
+
+                    res = await api.import_backup(file_bytes, file_name)
+                    if res.get("success"):
+                        msg = self.t("import_success").format(
+                            res.get("imported_todos", 0), res.get("imported_persons", 0)
+                        )
+                        ui.notify(msg, type="positive")
+                        if self.on_refresh:
+                            await self.on_refresh()
+                    else:
+                        ui.notify(self.t("import_error").format(res.get("error", "")), type="negative")
+                except Exception as ex:
+                    ui.notify(self.t("import_error").format(str(ex)), type="negative")
+
             async def delete_selected():
                 selected_rows = table.selected
                 if not selected_rows:
@@ -154,11 +192,23 @@ class HistoryView:
                     for t in to_delete:
                         await self.on_delete(t)
 
-            # Create Button and Move to Header
+            # Create Buttons in Header
             with bulk_action_container:
-                ui.button(self.t("delete"), icon="delete", on_click=delete_selected).props(
-                    "color=red"
-                ).bind_visibility_from(table, "selected", backward=lambda s: len(s) > 0)
+                with ui.row().classes("gap-2 items-center"):
+                    ui.button(self.t("delete"), icon="delete", on_click=delete_selected).props(
+                        "color=red"
+                    ).bind_visibility_from(table, "selected", backward=lambda s: len(s) > 0)
+                    ui.button("JSON", icon="download", on_click=lambda: download_export("json")).props(
+                        "flat dense size=sm color=primary"
+                    ).tooltip(self.t("export_json"))
+                    ui.button("CSV", icon="download", on_click=lambda: download_export("csv")).props(
+                        "flat dense size=sm color=primary"
+                    ).tooltip(self.t("export_csv"))
+                    ui.upload(
+                        on_upload=handle_upload,
+                        auto_upload=True,
+                        max_file_size=5_000_000,
+                    ).props('flat dense label="Import" icon="file_upload" accept=".json,.csv"').classes("max-w-xs")
 
             # Slots for Actions Column
             table.add_slot(

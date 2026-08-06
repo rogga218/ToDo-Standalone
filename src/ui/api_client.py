@@ -32,8 +32,12 @@ async def run_db(func, *args, **kwargs):
 class ApiClient:
     async def get_todos(self) -> List[TodoRead]:
         try:
-            todos = await run_db(todo_service.get_todos)
-            return [TodoRead.model_validate(t) for t in todos]
+
+            def _fetch(session):
+                todos = todo_service.get_todos(session)
+                return [TodoRead.model_validate(t) for t in todos]
+
+            return await run_db(_fetch)  # type: ignore[no-any-return]
         except Exception as e:
             logger.error(f"Error fetching todos: {e}", exc_info=True)
             return []
@@ -124,6 +128,48 @@ class ApiClient:
             logger.error(f"Error deleting subtask: {e}", exc_info=True)
             err_msg = getattr(e, "detail", str(e))
             return {"success": False, "error": err_msg}
+
+    async def export_backup(self, format: str = "json") -> Dict[str, Any]:
+        try:
+            import json
+
+            from src.services.export_service import ExportService
+
+            if format == "json":
+                data = await run_db(ExportService.export_data_json)
+                content = json.dumps(data, indent=2, ensure_ascii=False)
+                return {"success": True, "content": content, "filename": "todo_backup.json"}
+            else:
+                content = await run_db(ExportService.export_data_csv)
+                return {"success": True, "content": content, "filename": "todo_backup.csv"}
+        except Exception as e:
+            logger.error(f"Error exporting backup: {e}", exc_info=True)
+            return {"success": False, "error": _format_error(e)}
+
+    async def import_backup(self, content_bytes: bytes, filename: str) -> Dict[str, Any]:
+        try:
+            import json
+
+            from src.services.export_service import ExportService
+
+            filename_lower = filename.lower()
+            if filename_lower.endswith(".json"):
+                data = json.loads(content_bytes.decode("utf-8"))
+                res = await run_db(ExportService.import_data_json, data)
+            elif filename_lower.endswith(".csv"):
+                text = content_bytes.decode("utf-8")
+                res = await run_db(ExportService.import_data_csv, text)
+            else:
+                try:
+                    data = json.loads(content_bytes.decode("utf-8"))
+                    res = await run_db(ExportService.import_data_json, data)
+                except Exception:
+                    text = content_bytes.decode("utf-8")
+                    res = await run_db(ExportService.import_data_csv, text)
+            return res  # type: ignore[no-any-return]
+        except Exception as e:
+            logger.error(f"Error importing backup: {e}", exc_info=True)
+            return {"success": False, "error": _format_error(e)}
 
 
 # Singleton instance

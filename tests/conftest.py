@@ -10,7 +10,7 @@ from sqlmodel import Session, SQLModel, create_engine
 
 import src.models  # noqa: F401  # Required for SQLModel metadata to register the tables
 from src.database import get_session
-from src.routers import ai, persons, todos
+from src.routers import ai, backup, persons, todos
 
 # Use an in-memory SQLite database for tests
 TEST_DATABASE_URL = "sqlite:///:memory:"
@@ -36,6 +36,7 @@ def client_fixture(session: Session) -> Generator[TestClient, None, None]:
     test_app.include_router(persons.router)
     test_app.include_router(todos.router)
     test_app.include_router(ai.router)
+    test_app.include_router(backup.router)
 
     def get_session_override():
         return session

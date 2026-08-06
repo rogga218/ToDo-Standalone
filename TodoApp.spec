@@ -1,11 +1,15 @@
-# -*- mode: python ; coding: utf-8 -*-
+import os
 
+SPECPATH = os.path.dirname(os.path.abspath(SPEC))
 
 a = Analysis(
-    ['C:\\WorkingDir\\Antigravity\\ToDoV2_0_Standalone\\src\\main.py'],
+    [os.path.join(SPECPATH, 'src', 'main.py')],
     pathex=[],
     binaries=[],
-    datas=[('C:\\WorkingDir\\Antigravity\\ToDoV2_0_Standalone\\src', 'src'), ('C:\\WorkingDir\\Antigravity\\ToDoV2_0_Standalone\\src\\assets', 'src/assets')],
+    datas=[
+        (os.path.join(SPECPATH, 'src'), 'src'),
+        (os.path.join(SPECPATH, 'src', 'assets'), 'src/assets'),
+    ],
     hiddenimports=['uvicorn', 'passlib.handlers.bcrypt', 'pydantic_settings', 'python_multipart', '_cffi_backend', 'cffi', 'PySide6.QtWebEngineWidgets'],
     hookspath=[],
     hooksconfig={},
@@ -35,5 +39,5 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=['C:\\WorkingDir\\Antigravity\\ToDoV2_0_Standalone\\src\\assets\\logo.ico'],
+    icon=[os.path.join(SPECPATH, 'src', 'assets', 'logo.ico')],
 )

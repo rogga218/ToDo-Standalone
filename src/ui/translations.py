@@ -39,6 +39,9 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "desc_label": "Beskrivning",
         "deadline_label": "Deadline",
         "title_person_required": "Titel och Person krävs",
+        "title_required": "Titel krävs",
+        "person_required": "Person krävs",
+        "invalid_date_format": "Ogiltigt datumformat (YYYY-MM-DD)",
         "updated": "Uppdaterad",
         "task_created": "Uppgift skapad!",
         "task_deleted": "Borttagen",
@@ -77,6 +80,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         # Critical Errors
         "critical_error_title": "Kritiskt Fel",
         "critical_error_msg": "Kritiskt Fel:\n{}\n\nSe crash.log för detaljer.",
+        # Backup & Export
+        "export_json": "Exportera JSON",
+        "export_csv": "Exportera CSV",
+        "import_backup": "Importera Säkerhetskopia",
+        "import_success": "Importerade {} uppgifter och {} personer",
+        "import_error": "Import misslyckades: {}",
     },
     "en": {
         # Navigation
@@ -115,6 +124,9 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         "desc_label": "Description",
         "deadline_label": "Deadline",
         "title_person_required": "Title and Person are required",
+        "title_required": "Title is required",
+        "person_required": "Person is required",
+        "invalid_date_format": "Invalid date format (YYYY-MM-DD)",
         "updated": "Updated",
         "task_created": "Task created!",
         "task_deleted": "Deleted",
@@ -153,6 +165,12 @@ TRANSLATIONS: Dict[str, Dict[str, str]] = {
         # Critical Errors
         "critical_error_title": "Critical Error",
         "critical_error_msg": "Critical Error:\n{}\n\nSee crash.log for details.",
+        # Backup & Export
+        "export_json": "Export JSON",
+        "export_csv": "Export CSV",
+        "import_backup": "Import Backup",
+        "import_success": "Imported {} tasks and {} persons",
+        "import_error": "Import failed: {}",
     },
 }
 

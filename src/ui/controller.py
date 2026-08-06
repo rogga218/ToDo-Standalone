@@ -224,5 +224,6 @@ class ToDoController:
                     on_delete=on_delete,
                     on_restore=on_restore,
                     on_bulk_delete=on_bulk_delete,
+                    on_refresh=self.refresh,
                     language=self.language,
                 ).render()

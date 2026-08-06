@@ -78,7 +78,6 @@ class BoardView:
                 future_map[d_str].append(todo)
 
         # 4. Build Columns List
-        # Explicit type hint to help analyzer
         columns_data: List[Dict[str, Any]] = []
 
         # Overdue allowed if exists
@@ -102,7 +101,6 @@ class BoardView:
 
         # Future Dates
         sorted_dates = sorted([k for k in future_map.keys() if k != self.t("no_date")])
-        # Add Future dates
         for d in sorted_dates:
             columns_data.append(
                 {
@@ -124,7 +122,6 @@ class BoardView:
 
         # Pagination
         page_size = 4
-        # Calculate safe page
         total_pages = max(1, (len(columns_data) + page_size - 1) // page_size)
         current_page = max(0, min(self.page, total_pages - 1))
 
@@ -135,8 +132,6 @@ class BoardView:
         with ui.row().classes("w-full h-full gap-4 overflow-x-auto no-wrap p-4 items-start"):
             for col in visible_columns:
                 with ui.column().classes(f"min-w-[320px] flex-1 h-full rounded-xl p-4 {col['bg']} border"):
-                    # Header with Indicator
-                    # Explicit cast to list
                     items: List[TodoRead] = col["items"]
                     all_completed = not items or all(t.completed for t in items)
                     indicator_color = "bg-green-500" if all_completed else "bg-red-500"
@@ -153,7 +148,6 @@ class BoardView:
                                 self.render_card(todo)
 
     def render_card(self, todo: TodoRead) -> None:
-        # Card Styling: "P1, P2" removal, colored relief
         prio_color_border = {
             1: "border-l-4 border-red-500",
             2: "border-l-4 border-yellow-500",
@@ -167,7 +161,6 @@ class BoardView:
 
         with ui.card().classes(card_classes):
             # Header: Person
-            # Access p.id and p.name
             person_name = next((p.name for p in self.persons if str(p.id) == str(todo.person_id)), "?")
 
             with ui.row().classes("w-full justify-between items-center text-xs opacity-70 mb-1"):
@@ -175,8 +168,7 @@ class BoardView:
                 if todo.deadline:
                     ui.label(str(todo.deadline))
 
-            # Title & Desc ("visar hela texten")
-            # Remove text-black. Inherit color.
+            # Title & Desc
             title_classes = "text-md font-bold mb-1 leading-tight block break-words"
             if todo.completed:
                 title_classes += " line-through opacity-50"
@@ -188,28 +180,38 @@ class BoardView:
             # Subtasks
             subtasks = todo.subtasks
             if subtasks:
-                with (
+                total_subs = len(subtasks)
+                done_subs = sum(1 for s in subtasks if s.completed)
+                pct = done_subs / total_subs if total_subs > 0 else 0.0
+
+                expansion = (
                     ui.expansion()
                     .classes("w-full bg-gray-100 dark:bg-slate-900/50 rounded text-xs mb-2")
-                    .props(f'dense icon="list" label="{self.t("subtasks")}"')
-                ):
+                    .props(f'dense icon="list" label="{self.t("subtasks")} ({done_subs}/{total_subs})"')
+                )
+                with expansion:
+                    progress = (
+                        ui.linear_progress(value=pct, show_value=False)
+                        .classes("mb-2 h-1.5 rounded bg-gray-200 dark:bg-slate-700")
+                        .props("color=positive" if pct == 1.0 else "color=primary")
+                    )
                     for sub in subtasks:
                         with ui.row().classes("items-start gap-2 no-wrap w-full"):
+                            lbl = ui.label(sub.title).classes(
+                                "flex-1 break-words opacity-80" + (" line-through" if sub.completed else "")
+                            )
                             ui.checkbox(
                                 value=sub.completed,
                                 # type: ignore[arg-type]
-                                on_change=lambda e, s=sub: self.toggle_subtask(todo, s, e.value),
+                                on_change=lambda e, t=todo, s=sub, exp=expansion, prog=progress, target_lbl=lbl: (
+                                    self.toggle_subtask(t, s, e.value, exp, prog, target_lbl)
+                                ),
                             ).props("dense")
-                            ui.label(sub.title).classes(
-                                "flex-1 break-words opacity-80" + (" line-through" if sub.completed else "")
-                            )
 
             # Actions
             with ui.row().classes("w-full justify-end gap-2 mt-2"):
-                # Explicitly set colors for icons to handle dark mode
                 icon_classes = "text-gray-600 dark:text-white"
 
-                # Check for Gemini Key
                 if get_settings().GEMINI_API_KEY:
                     ai_btn = (
                         ui.button(
@@ -242,35 +244,32 @@ class BoardView:
                 ).classes("text-red-600 dark:text-red-400").tooltip(self.t("delete"))
 
     async def toggle_complete(self, todo: TodoRead) -> None:
-        # We need to send dictionary to update callback which eventually calls API
-        # Or better update on_update to accept object
-        # on_update in controller already accepts object.
-        # But here we modify it locally first?
-        # Actually controller's on_update calls api.update_todo(model_dump)
-        # We can just toggle and call on_update.
-        # Note: We can't modify the object in place if it is immutable,
-        # but Pydantic models are mutable by default unless frozen.
-
-        # Create a copy or just modify.
-        # Ideally we don't modify the local object until confirmed, but for UI responsiveness we might.
-        # Let's pass the object to on_update, but we need to toggle the logic.
-        # Since on_update takes the *updated* object/dict.
-
-        # Let's create a model copy with updated field.
-        # todo.completed = not todo.completed
-        # await self.on_update(todo)
-
-        # However, to avoid mutation validaton issues if any, let's just toggle and send.
         todo.completed = not todo.completed
         await self.on_update(todo)
 
-    async def toggle_subtask(self, todo: TodoRead, subtask: Any, completed: bool) -> None:
+    async def toggle_subtask(
+        self,
+        todo: TodoRead,
+        subtask: Any,
+        completed: bool,
+        expansion: ui.expansion | None = None,
+        progress: ui.linear_progress | None = None,
+        label: ui.label | None = None,
+    ) -> None:
+        subtask.completed = completed
+        if label:
+            if completed:
+                label.classes(add="line-through")
+            else:
+                label.classes(remove="line-through")
+
+        if expansion and progress and todo.subtasks:
+            total_subs = len(todo.subtasks)
+            done_subs = sum(1 for s in todo.subtasks if s.completed)
+            pct = done_subs / total_subs if total_subs > 0 else 0.0
+
+            progress.set_value(pct)
+            progress.props(f"color={'positive' if pct == 1.0 else 'primary'}")
+            expansion.props(f'label="{self.t("subtasks")} ({done_subs}/{total_subs})"')
+
         await api.toggle_subtask(str(subtask.id), completed)
-        # Refresh logic should be handled by parent re-render or explicit refresh
-        # But for now we rely on the parent refreshing the data
-        # To make it snappy we might want optimistic updates but let's stick to refresh for MVP
-        # Actually Layout handles "on_refresh", maybe we just call it?
-        # Ideally we pass a callback that triggers data fetch.
-        pass  # The checkbox change triggers this, but we also want to update UI.
-        # For now, let's assume the user manually refreshes or we trigger a global refresh.
-        # Better: invalidating the data in main.

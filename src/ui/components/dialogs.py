@@ -33,19 +33,20 @@ class PersonDialog:
                 name_input = ui.input(self.t("name_label"), value="").classes("flex-grow").props("maxlength=50")
 
                 async def create_new():
-                    # Ensure safe string handling if value is None
+                    name_input.error = None
                     val = (name_input.value or "").strip()
                     if not val:
-                        ui.notify(self.t("name_required"), type="negative")
+                        name_input.error = self.t("name_required")
                         return
                     if len(val) < 2:
-                        ui.notify(self.t("name_too_short"), type="negative")
+                        name_input.error = self.t("name_too_short")
                         return
 
                     res = await api.create_person(val)
                     if res["success"]:
-                        ui.notify(self.t("person_created"))
+                        ui.notify(self.t("person_created"), type="positive")
                         name_input.value = ""  # Clear input
+                        name_input.error = None
                         await self.refresh_list()  # Refresh Local List
                         await self.on_success()  # Refresh Background App
                     else:
@@ -60,7 +61,7 @@ class PersonDialog:
                         if "Person already exists" in err:
                             err = self.t("person_exists")
 
-                        ui.notify(err, type="negative")
+                        name_input.error = err
 
                 ui.button(icon="add", on_click=lambda e: create_new()).props("round flat color=green")
 
@@ -88,9 +89,6 @@ class PersonDialog:
             ui.label("...").classes("text-gray-400 italic")
 
         for p in self.persons:
-            # Check if person has assigned todos
-            # p is now a Person object, so use p.id not p["id"]
-            # t is now TodoRead object, so use t.person_id
             has_todos = any(str(t.person_id) == str(p.id) for t in self.todos)
 
             with ui.row().classes(
@@ -156,11 +154,7 @@ class TodoDialog:
             title_input = ui.input(self.t("title_label"), value=initial_title).classes("w-full").props("maxlength=50")
             desc_input = ui.textarea(self.t("desc_label"), value=initial_desc).classes("w-full").props("maxlength=500")
 
-            # Person Select
-            # p is Person object, access p.id and p.name
             p_options = {p.id: p.name for p in self.persons}
-
-            # Ensure safe value if person deleted or invalid?
             if initial_person and initial_person not in p_options:
                 initial_person = None
 
@@ -185,6 +179,7 @@ class TodoDialog:
 
                 def on_date_change(e):
                     deadline_input.set_value(e.value)
+                    deadline_input.error = None
                     date_picker.close()
 
                 ui.date(on_change=on_date_change)
@@ -193,20 +188,37 @@ class TodoDialog:
                 ui.icon("event").on("click", date_picker.open).classes("cursor-pointer")
 
             async def save():
-                if not title_input.value or not person_select.value:
-                    ui.notify(self.t("title_person_required"), type="negative")
-                    return
+                title_input.error = None
+                desc_input.error = None
+                person_select.error = None
+                deadline_input.error = None
+
+                has_error = False
+                if not (title_input.value or "").strip():
+                    title_input.error = self.t("title_required")
+                    has_error = True
+
+                if not person_select.value:
+                    person_select.error = self.t("person_required")
+                    has_error = True
 
                 desc_val = (desc_input.value or "").strip()
                 if not desc_val:
-                    ui.notify(self.t("desc_required"), type="negative")
+                    desc_input.error = self.t("desc_required")
+                    has_error = True
+
+                d_parsed = None
+                if deadline_input.value:
+                    try:
+                        d_parsed = date.fromisoformat(deadline_input.value)
+                    except ValueError:
+                        deadline_input.error = self.t("invalid_date_format")
+                        has_error = True
+
+                if has_error:
                     return
 
                 if todo:
-                    # Update
-                    # Parse deadline string to date object for type safety
-                    d_parsed = date.fromisoformat(deadline_input.value) if deadline_input.value else None
-
                     update_data = TodoUpdate(
                         title=title_input.value,
                         description=desc_input.value,
@@ -216,16 +228,12 @@ class TodoDialog:
                     )
                     res = await api.update_todo(str(todo.id), update_data)
                 else:
-                    # Create
-                    # Parse deadline string to date object for type safety
-                    d_parsed = date.fromisoformat(deadline_input.value) if deadline_input.value else date.today()
-
                     payload = {
                         "title": title_input.value,
                         "description": desc_input.value,
                         "person_id": person_select.value,
                         "priority": priority_select.value,
-                        "deadline": d_parsed,
+                        "deadline": d_parsed or date.today(),
                         "completed": False,
                     }
                     res = await api.create_todo(payload)
@@ -236,7 +244,15 @@ class TodoDialog:
                     dialog.close()
                     await self.on_success()
                 else:
-                    ui.notify(res["error"], type="negative")
+                    err = str(res["error"])
+                    if "title" in err.lower():
+                        title_input.error = err
+                    elif "description" in err.lower():
+                        desc_input.error = err
+                    elif "deadline" in err.lower():
+                        deadline_input.error = err
+                    else:
+                        ui.notify(err, type="negative")
 
             ui.button(self.t("save"), on_click=save).classes("w-full bg-indigo-600")
         dialog.open()

@@ -30,12 +30,13 @@ def handle_fatal_error(e):
             title = get_text("critical_error_title", lang)
             msg = get_text("critical_error_msg", lang).format(e)
 
-            ctypes.windll.user32.MessageBoxW(
-                0,
-                msg,
-                title,
-                0x10 | 0x1000,
-            )
+            if hasattr(ctypes, "windll"):
+                ctypes.windll.user32.MessageBoxW(
+                    0,
+                    msg,
+                    title,
+                    0x10 | 0x1000,
+                )
         except Exception:
             pass
     else:

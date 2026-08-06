@@ -90,7 +90,6 @@ graph TD
 │
 ├── src/                      # Application Source Code
 │   ├── main.py               # Main entry point (starts FastAPI + NiceGUI)
-│   ├── backend_app.py        # FastAPI app initialization & route mounting
 │   ├── models.py             # SQLModel data schemas (Todo, Person, SubTask)
 │   ├── database.py           # SQLite connection & session management
 │   ├── config.py             # Environment configuration (pydantic-settings)

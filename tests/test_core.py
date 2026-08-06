@@ -98,3 +98,29 @@ def test_handle_fatal_error_exception(mock_print, mock_log_crash, monkeypatch):
     assert e.value.code == 1
     mock_log_crash.assert_called_once()
     mock_print.assert_called()
+
+
+@patch("src.core.errors.log_crash")
+def test_handle_fatal_error_frozen(mock_log_crash, monkeypatch):
+    monkeypatch.setattr("sys.frozen", True, raising=False)
+
+    with patch("ctypes.windll", create=True):
+        with pytest.raises(SystemExit) as e:
+            handle_fatal_error(Exception("Frozen Fatal Error"))
+
+    assert e.value.code == 1
+    mock_log_crash.assert_called_once()
+
+
+@patch("builtins.input", return_value="")
+@patch("builtins.print")
+@patch("src.core.errors.log_crash")
+def test_handle_fatal_error_tty(mock_log_crash, mock_print, mock_input, monkeypatch):
+    monkeypatch.setattr("sys.frozen", False, raising=False)
+    monkeypatch.setattr("sys.stdin.isatty", lambda: True, raising=False)
+
+    with pytest.raises(SystemExit) as e:
+        handle_fatal_error(Exception("TTY Fatal Error"))
+
+    assert e.value.code == 1
+    mock_input.assert_called_once()
