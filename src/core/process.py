@@ -87,7 +87,7 @@ def shutdown_cleanup(logger):
                     parent = root.parent()
                 else:
                     break
-        except (psutil.NoSuchProcess, psutil.AccessDenied):
+        except psutil.NoSuchProcess, psutil.AccessDenied:
             pass
 
         root_pid = root.pid

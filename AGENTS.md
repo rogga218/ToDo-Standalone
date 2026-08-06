@@ -1,54 +1,37 @@
-# Agent Configuration & Identity
+# Agent Directives: ToDo Standalone
 
-## Overview
+## 1. Quick Verification Commands
+Always run these commands before concluding code tasks:
+- **Linting & Formatting:** `ruff check src` & `ruff format src`
+- **Type Checking:** `mypy src`
+- **Unit & Integration Tests:** `pytest -v -m "not gui"`
+- **Dependency Audit:** `pip-audit -r requirements.txt`
 
-This document defines the persona, capabilities, and strict operational guidelines for the AI Agent (Antigravity/Gemini) interacting with the ToDo Standalone repository.
+## 2. Architecture & Path Map
+Maintain strict Separation of Concerns (SoC):
+- **UI Components & Pages:** `src/ui/` (NiceGUI pages, dialogs, theme, i18n in `translations.py`)
+- **Business Logic Services:** `src/services/` (`todo_service.py`, `person_service.py`, `ai_service.py`)
+- **FastAPI Endpoints:** `src/routers/` (`todos.py`, `persons.py`, `ai.py`)
+- **Data Models:** `src/models.py` (SQLModel / Pydantic V2)
+- **Database & Config:** `src/database.py` (SQLite & sessions), `src/config.py` (loads `.env`)
 
-## Identity
+## 3. Key Patterns & Gotchas
+- **DB Sessions:** Services accept an explicit `Session` (`session: Session`). Do not create global unclosed sessions.
+- **UI & Controller Separation:** Keep `src/ui/pages/` declarative. Route state & data logic through `src/ui/controller.py`.
+- **SQLModel Relationships:** Eager-load nested models (`Todo.subtasks`) within active session contexts before UI rendering.
+- **Dual Requirements:** Runtime dependencies stay in `requirements.txt`; EXE packaging tools (`PyInstaller`, `PySide6`) stay in `requirements-build.txt`.
+- **Test Markers:** CI runs fast unit tests (`pytest -m "not gui"`). Browser GUI tests use `@pytest.mark.gui` / `npx playwright test`.
 
-You are an expert Python developer and automation assistant. Your goal is to help maintain, expand, and debug this standalone ToDo application. You prioritize clean architecture, strict typing, and comprehensive test coverage.
+## 4. Mandatory Constraints & Environment
+- **Terminal:** Operating in Windows — use **PowerShell** syntax exclusively for terminal commands.
+- **Containers:** Prefer `podman-compose` (or `docker-compose`) for container commands (e.g. `podman-compose up --build -d`).
+- **Environment & Config:** Runtime variables (`DATABASE_URL`, `GEMINI_API_KEY`, `STORAGE_SECRET`, `PORT`) are driven by `.env` (templated in `.env.example`).
+- **Zero Warnings:** Fix all LSP errors, lint warnings, and type errors before concluding tasks.
+- **Language Policy:** Write all code, docstrings, and comments in **English**.
+- **Test Coverage:** Maintain >65% test coverage requirement (`pytest-cov`).
 
-## Core Technologies & Stack
-
-- **Language:** Python 3.14+
-- **Frontend/UI:** NiceGUI (Vue.js, Tailwind CSS)
-- **Backend:** FastAPI (Running integrated with NiceGUI)
-- **Database:** SQLite with SQLModel (ORM / Pydantic V2)
-- **Containerization:** Podman/Docker
-- **Desktop Packaging:** PyInstaller & PySide6
-- **Quality Tools:** Ruff (Linting/Formatting), Mypy (Typing), Pytest (Testing), Playwright (GUI Testing)
-- **Environment:** Windows (PowerShell)
-
-## Strict Operational Guidelines
-
-### 1. System & Terminal Environment
-- **Operating System:** You are operating in a **Windows** environment. Always use PowerShell syntax exclusively when executing terminal commands.
-- **Error Analysis:** Analyze PowerShell errors thoroughly before retrying commands.
-- **Container Engine:** Prefer `podman` or `docker` commands as appropriate. Ensure compatibility with Dockerfiles and Containerfiles.
-
-### 2. Development Standards
-- **Zero-Warning Policy:** Actively monitor and fix errors/warnings (LSP diagnostics / Problems tab) before considering a task complete.
-- **Architecture:** Strictly follow "Separation of Concerns" (SoC) between UI, routing, and business logic (services).
-- **Language Policy:** All code, docstrings, and comments must be written in **English**.
-
-### 3. Reliability & Error Handling
-- **Fail Gracefully:** Do not allow silent failures. Proactively implement boundary checks and validate edge cases (e.g., nulls, empty strings).
-- **Fail Fast (Agent Specific):** If you encounter an "Error while editing" or modification mismatch, STOP, re-read the file using specific tools, and plan the edit again.
-
-### 4. Code Quality & Testing
-- **Linting & Formatting:** Ensure code complies with `ruff format src` and `ruff check src`.
-- **Type Checking:** Ensure code passes `mypy src` with no errors.
-- **Testing:** Maintain or improve test coverage. The project enforces a strict >65% coverage rule (`pytest-cov`). When writing GUI tests, use the Playwright CLI as defined in your skills.
-
-### 5. Documentation
-- **Continuous Updates:** Always update `README.md` and related documentation when making architectural changes, adding features, or changing setup instructions.
-- **OpenSpec Workflows:** Utilize OpenSpec artifacts (proposals, designs, tasks) to manage complex changes and explore ideas before implementing them.
-
-## General Workflow
-
-1. **Understand Context:** Check existing workflows and artifacts.
-2. **Explore Mode:** If ideas are vague, use the `openspec-explore` skill to visualize and define requirements without writing code.
-3. **Plan:** If modifying architecture or significant logic, document an implementation plan.
-4. **Implement:** Write code adhering strictly to the Zero-Warning Policy and SoC.
-5. **Verify:** Run Ruff, Mypy, and Pytest.
-6. **Document:** Ensure `README.md` or OpenSpec artifacts reflect the new state.
+## 5. Execution Workflow
+1. **Inspect:** Read relevant source files and schemas before making edits.
+2. **Implement:** Write modular code following Separation of Concerns.
+3. **Verify:** Run `ruff check src`, `mypy src`, and `pytest -v -m "not gui"`.
+4. **Document:** Keep `README.md` and documentation up to date when adding features or changing configs.

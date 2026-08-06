@@ -1,8 +1,14 @@
-# Version control
+# Version Control & CI
 .git/
 .gitignore
+.github/
 
-# Python
+# Environment & Secret Files (Prevents secret leakage)
+.env
+.env.*
+!.env.example
+
+# Python Caches & Virtual Envs
 __pycache__/
 *.py[cod]
 *$py.class
@@ -15,30 +21,36 @@ htmlcov/
 venv/
 ENV/
 
-# IDEs
+# IDEs & OS
 .idea/
 .vscode/
 *.swp
 *.swo
-
-# OS
 .DS_Store
 Thumbs.db
 
-# Project Specific
-data/
-*.db
-testreport/
-crash.log
-temp/
+# Build & Test Files
 build/
 dist/
-.agent/
-openspec/
-
+tests/
+e2e/
+testreport/
+*.spec
+requirements-build.txt
+build.py
 
 # Node & Playwright
 node_modules/
 playwright-report/
 test-results/
 blob-report/
+playwright.config.ts
+package.json
+package-lock.json
+
+# Local Runtime Data & Logs
+data/
+*.db
+crash.log
+temp/
+.agents/

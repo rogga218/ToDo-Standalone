@@ -1,4 +1,4 @@
-# Python
+# Python Caches
 __pycache__/
 *.py[cod]
 *$py.class
@@ -26,7 +26,7 @@ MANIFEST
 *.spec
 !TodoApp.spec
 
-# Unit test / coverage reports
+# Unit Test & Coverage Reports
 htmlcov/
 .tox/
 .nox/
@@ -41,25 +41,18 @@ coverage.xml
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+testreport/
 
-# Translations
-*.mo
-*.pot
-
-# Django stuff:
-*.log
-local_settings.py
-db.sqlite3
-db.sqlite3-journal
-
-# Instance-specific things
+# Environment & Local Configuration
 .env
+.env.*
+!.env.example
 .venv
 env/
 venv/
-ENV/
-env.bak/
-venv.bak/
+
+# Logs
+*.log
 
 # IDEs
 .idea/
@@ -72,21 +65,15 @@ venv.bak/
 Thumbs.db
 Desktop.ini
 
-# Project Specific
+# Project Specific Database & Runtime Artifacts
 *.db
 *.db-shm
 *.db-wal
-testreport/
-todo.db
 data/
-crash.log
-
-# Temp Scratchpad
 temp/
 
-# OpenSpec (Added temporarily)
-.agent/
-openspec/
+# Custom Agent Config
+.agents/
 
 # Node & Playwright
 node_modules/

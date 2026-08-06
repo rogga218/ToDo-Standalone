@@ -27,7 +27,6 @@ class Settings(BaseSettings):
     GEMINI_API_KEY: Optional[str] = None
     GEMINI_MODEL: str = "gemini-flash-latest"
 
-
     # Security & Network
     STORAGE_SECRET: str = "antigravity_secret"
     PORT: int = 8080

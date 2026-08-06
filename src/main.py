@@ -132,7 +132,6 @@ try:
             if os.path.exists(icon_path):
                 window.setWindowIcon(QIcon(icon_path))
 
-
             web_view = QWebEngineView()
             web_view.load(QUrl(f"http://127.0.0.1:{args['port']}"))
             window.setCentralWidget(web_view)

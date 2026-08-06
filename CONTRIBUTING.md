@@ -58,9 +58,10 @@ To set up your local development environment, please follow these steps:
 
 ## Code Style & Standards
 
-- **Language:** Code and comments should be in English. The UI is in Swedish.
-- **Python Style:** Follow PEP 8 guidelines.
-- **Architecture:** Maintain Separation of Concerns (SoC). UI logic goes in `src/ui`, business logic in `src/services`, data access in `src/database.py` and models in `src/models.py`.
+- **Language Policy:** All code, docstrings, and comments must be written in **English**. The UI features full built-in internationalization (i18n) supporting both English and Swedish.
+- **Python Style:** Follow standard PEP 8 guidelines enforced via Ruff (`ruff check src`, `ruff format src`).
+- **Type Checking:** All Python functions must include static type annotations validated by Mypy (`mypy src`).
+- **Architecture:** Maintain Separation of Concerns (SoC). UI components go in `src/ui/`, business logic in `src/services/`, database operations in `src/database.py`, and SQLModel models in `src/models.py`.
 
 ## Getting Help
 

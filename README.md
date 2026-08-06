@@ -1,5 +1,6 @@
 # ToDo App (NiceGUI Standalone)
 
+[![Python CI](https://github.com/rogga218/ToDo-Standalone/actions/workflows/test.yml/badge.svg)](https://github.com/rogga218/ToDo-Standalone/actions/workflows/test.yml)
 ![Python 3.14+](https://img.shields.io/badge/Python-3.14%2B-blue.svg?logo=python&logoColor=white)
 ![NiceGUI](https://img.shields.io/badge/UI-NiceGUI-green.svg)
 ![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg?logo=fastapi&logoColor=white)
@@ -11,6 +12,29 @@ A modern, fast, and simple ToDo application built with **NiceGUI** and **SQLite*
 > Developed with **Google Antigravity** and **Gemini**.
 
 This project has been refactored to specifically focus on a single, native Python implementation. It is primarily built to be deployed as a **Container (Podman/Docker)**, with the added bonus of being easily bundled into a unified **Standalone Desktop App (.exe)**.
+
+## Table of Contents
+- [System Architecture](#system-architecture)
+- [Features](#features)
+- [Tech Stack](#tech-stack)
+- [Developer & Tester Cheatsheet](#developer--tester-cheatsheet)
+- [Project Structure & Directory Guidance](#project-structure--directory-guidance)
+- [Getting Started](#getting-started)
+- [Running the App](#running-the-app)
+- [Testing & Data](#testing--data)
+- [License](#license)
+
+
+## System Architecture
+
+```mermaid
+graph TD
+    Client["Browser / PySide6 Desktop Edge"] -->|HTTP / WebSockets| UI["NiceGUI Frontend Layer"]
+    UI -->|Internal Call| Controller["UI Controller & State"]
+    Controller -->|Direct Service Invocation| Services["Business Services (Todo, Person, AI)"]
+    Services -->|SQLModel ORM| DB[("SQLite Database (todo.db)")]
+    Services -.->|Google GenAI API| Gemini["Gemini AI Service"]
+```
 
 ## Features
 
@@ -43,102 +67,79 @@ This project has been refactored to specifically focus on a single, native Pytho
 -   **Linting & Formatting**: Ruff
 -   **Type Checking**: Mypy
 
-## Project Structure
+## Developer & Tester Cheatsheet
+
+| Task | Command |
+| :--- | :--- |
+| **Run App Locally** | `python -m src.main` |
+| **Run via Podman/Docker** | `podman-compose up --build -d` |
+| **Fast Unit Tests** | `pytest -m "not gui"` |
+| **E2E Playwright Browser Tests** | `npx playwright test` |
+| **Lint & Type Check** | `ruff check src` && `mypy src` |
+| **Seed Test Data** | `python -m src.seed_data` |
+| **Build Desktop .exe** | `pip install -r requirements-build.txt` && `python build.py` |
+
+## Project Structure & Directory Guidance
 
 ```
-├── .env                                  # Configuration file
-├── .env.example                          # Configuration template
-├── .gitignore                            # Git ignore file
-├── build.py                              # Build script (PyInstaller)
-├── docker-compose.yml                    # Orchestration
-├── Dockerfile                            # Container definition
-├── README.md                             # Project documentation
-├── pyproject.toml                        # Project configuration
-├── requirements.txt                      # Dependencies
-├── requirements-build.txt                # Desktop EXE Compiling Dependencies
-├── scripts/                              # Utility scripts
-│   └── generate_secret.py                # Secret generator utility
-├── src/
-│   ├── assets/                           # Static assets
-│   │   ├── logo.ico                      # Windows icon
-│   │   └── logo.svg                      # Scalable logo
-│   ├── backend_app.py                    # Backend application
-│   ├── config.py                         # Configuration
-│   ├── core/                             # Core application utilities
-│   │   ├── errors.py                     # Fatal error handling
-│   │   └── process.py                    # Process & shutdown management
-│   ├── database.py                       # Database setup
-│   ├── main.py                           # Entry point
-│   ├── models.py                         # Data models
-│   ├── routers/                          # FastAPI routers
-│   │   ├── __init__.py                   # Package initialization
-│   │   ├── ai.py                         # AI endpoints
-│   │   ├── persons.py                    # Person endpoints
-│   │   └── todos.py                      # Todo endpoints
-│   ├── seed_data.py                      # Test data generator
-│   ├── services/                         # Business logic
-│   │   ├── ai_service.py                 # AI service
-│   │   ├── person_service.py             # Person service
-│   │   └── todo_service.py               # Todo service
-│   └── ui/                               # Frontend components and pages
-│       ├── api_client.py                 # Internal API Client
-│       ├── components/                   # Reusable UI components
-│       │   └── dialogs.py                # UI Dialogs
-│       ├── controller.py                 # UI Controller (Logic & State)
-│       ├── layout.py                     # Main layout wrapper
-│       ├── pages/                        # Page content
-│       │   ├── board.py                  # Board page
-│       │   └── history.py                # History page
-│       ├── routes.py                     # UI Page definitions
-│       ├── theme.py                      # Theme management
-│       └── translations.py               # Localization (EN/SV)
-└── tests/                                # Automated tests
-    ├── conftest.py                       # Fixtures & Reporting
-    ├── gui/                              # GUI Tests (Playwright)
-    │   ├── conftest.py                   # GUI test subprocess fixtures
-    │   ├── coverage_wrapper.py           # Subprocess coverage tracking
-    │   └── test_app_gui.py               # E2E test suite
-    ├── test_ai_service_mock.py           # AI Mock tests
-    ├── test_api_client.py                # Integration tests
-    ├── test_core.py                      # Core utilities & process tests
-    ├── test_core_utils.py                # App Initialization & Config tests
-    ├── test_person_service.py            # Person CRUD tests
-    ├── test_routers.py                   # API router integration tests
-    ├── test_seed_data.py                 # DB mock data generation tests
-    ├── test_services.py                  # Basic Unit tests
-    ├── test_todo_service_extended.py     # Advanced Todo tests
-    ├── test_ui_controller.py             # UI Controller tests
-    ├── test_ui_dialogs.py                # UI Dialog tests
-    ├── test_ui_history_serialization.py  # UI Serialization tests
-    └── test_validation.py                # Data Model Validation tests
+├── .env.example              # Configuration environment template
+├── Dockerfile & docker-compose.yml # Container orchestration
+├── requirements.txt          # App & development dependencies
+├── requirements-build.txt    # Standalone desktop EXE build dependencies
+├── build.py                  # PyInstaller executable build script
+│
+├── src/                      # Application Source Code
+│   ├── main.py               # Main entry point (starts FastAPI + NiceGUI)
+│   ├── backend_app.py        # FastAPI app initialization & route mounting
+│   ├── models.py             # SQLModel data schemas (Todo, Person, SubTask)
+│   ├── database.py           # SQLite connection & session management
+│   ├── config.py             # Environment configuration (pydantic-settings)
+│   ├── core/                 # Error handling & process lifecycle management
+│   ├── services/             # Business logic (todo_service, person_service, ai_service)
+│   ├── routers/              # FastAPI REST endpoints (/todos, /persons, /ai)
+│   └── ui/                   # NiceGUI Frontend Layer
+│       ├── controller.py     # UI Controller & state management
+│       ├── theme.py          # Persistent dark/light theme engine
+│       ├── translations.py   # Multilingual localization (EN / SV)
+│       ├── components/       # Reusable UI dialogs and modals
+│       └── pages/            # Page layouts (Board, History views)
+│
+├── tests/                    # Automated Python Test Suite
+│   ├── conftest.py           # Pytest fixtures & test setup
+│   └── test_*.py             # Service, Router, Model & Controller unit tests
+│
+└── e2e/                      # End-to-End Playwright Browser Tests (TypeScript)
+    └── todo.spec.ts          # E2E browser user flow tests
 ```
 
 ## Getting Started
 
 ### Prerequisites
 
--   Python 3.14+
--   Podman or Docker - *For containerized run*
+- **Python 3.14+**
+- **Node.js (v18+) & npm** - *Required for Playwright E2E browser tests*
+- **Podman or Docker** - *Required for containerized deployment*
 
 ### Installation
 
-1.  **Clone the repository**:
-    ```bash
-    git clone <repository_url>
-    cd <repository_name>
-    ```
+1. **Clone the repository**:
+   ```bash
+   git clone https://github.com/rogga218/ToDo-Standalone.git
+   cd ToDo-Standalone
+   ```
 
-2.  **Create a virtual environment**:
-    ```bash
-    python -m venv .venv
-    .venv\Scripts\activate  # Windows
-    # source .venv/bin/activate # Linux/Mac
-    ```
+2. **Create a virtual environment**:
+   ```bash
+   python -m venv .venv
+   .venv\Scripts\activate  # Windows
+   # source .venv/bin/activate # Linux/Mac
+   ```
 
-3.  **Install dependencies**:
-    ```bash
-    pip install -r requirements.txt
-    ```
+3. **Install dependencies**:
+   ```bash
+   pip install -r requirements.txt
+   npm install
+   ```
 
 ### Configuration
 
@@ -252,10 +253,12 @@ podman-compose run --rm app pytest
 pytest
 ```
 
-### Code Quality & Linting
+### Code Quality & Continuous Integration (CI)
 
 This project adheres to a strict "Zero-Warning Policy" for code formatting and typing.
-We use **Ruff** for linting and formatting, and **Mypy** for static type checking.
+We use **Ruff** for linting and formatting, **Mypy** for static type checking, **PyPA gh-action-pip-audit** for vulnerability scanning, and **Pytest** for testing.
+
+These checks are automatically executed in GitHub Actions CI on every push and pull request.
 
 To check and format the codebase locally:
 ```bash
@@ -266,7 +269,7 @@ mypy src
 
 ### Dependency Security Auditing
 
-To audit project dependencies for known security vulnerabilities:
+Automated security auditing runs in CI via `pypa/gh-action-pip-audit`. To audit project dependencies locally:
 
 ```bash
 pip-audit -r requirements.txt
