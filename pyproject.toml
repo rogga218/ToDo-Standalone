@@ -7,9 +7,6 @@ addopts = "-v --cov=src --cov-fail-under=65 --cov-report=term-missing"
 filterwarnings = [
     "ignore:.*_UnionGenericAlias.*:DeprecationWarning",
 ]
-markers = [
-    "gui: marks tests as GUI tests requiring Playwright (deselect with '-m \"not gui\"')"
-]
 
 [tool.coverage.run]
 omit = ["src/main.py", "src/ui/routes.py"]

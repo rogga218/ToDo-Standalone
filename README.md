@@ -73,7 +73,7 @@ graph TD
 | :--- | :--- |
 | **Run App Locally** | `python -m src.main` |
 | **Run via Podman/Docker** | `podman-compose up --build -d` |
-| **Fast Unit Tests** | `pytest -m "not gui"` |
+| **Unit & Integration Tests** | `pytest` |
 | **E2E Playwright Browser Tests** | `npx playwright test` |
 | **Lint & Type Check** | `ruff check src` && `mypy src` |
 | **Seed Test Data** | `python -m src.seed_data` |
@@ -209,27 +209,21 @@ The test suite includes:
 
 To run the automated test suite using `pytest`:
 
-**Run Unit Tests Only (Default for CI):**
+**Run Unit & Integration Tests:**
 
 *With Podman/Docker:*
 ```bash
-podman-compose run --rm app pytest -m "not gui"
+podman-compose run --rm app pytest
 ```
 
 *Locally:*
 ```bash
-pytest -m "not gui"
+pytest
 ```
 
-**Run Python GUI Tests Only (Legacy):**
+**Run End-to-End (E2E) Browser Tests:**
 
-```bash
-pytest -m gui
-```
-
-**Run Node.js E2E Tests (Recommended):**
-
-We use Node-based Playwright for comprehensive end-to-end testing with UI Mode and Trace Viewer. Playwright will automatically start the backend server before testing.
+We use Node-based Playwright for comprehensive end-to-end testing with UI Mode and Trace Viewer. Playwright automatically starts the backend server before testing.
 
 ```bash
 npx playwright test
@@ -238,18 +232,6 @@ npx playwright test
 To debug tests visually:
 ```bash
 npx playwright test --ui
-```
-
-**Run All Tests (Unit + GUI):**
-
-*With Podman/Docker (GUI tests will be skipped if no browser is available in the container):*
-```bash
-podman-compose run --rm app pytest
-```
-
-*Locally:*
-```bash
-pytest
 ```
 
 ### Code Quality & Continuous Integration (CI)

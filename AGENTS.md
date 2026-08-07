@@ -4,7 +4,8 @@
 Always run these commands before concluding code tasks:
 - **Linting & Formatting:** `ruff check src` & `ruff format src`
 - **Type Checking:** `mypy src`
-- **Unit & Integration Tests:** `pytest -v -m "not gui"`
+- **Unit & Integration Tests:** `pytest -v`
+- **E2E Browser Tests:** `npx playwright test`
 - **Dependency Audit:** `pip-audit -r requirements.txt`
 
 ## 2. Architecture & Path Map
@@ -20,7 +21,7 @@ Maintain strict Separation of Concerns (SoC):
 - **UI & Controller Separation:** Keep `src/ui/pages/` declarative. Route state & data logic through `src/ui/controller.py`.
 - **SQLModel Relationships:** Eager-load nested models (`Todo.subtasks`) within active session contexts before UI rendering.
 - **Dual Requirements:** Runtime dependencies stay in `requirements.txt`; EXE packaging tools (`PyInstaller`, `PySide6`) stay in `requirements-build.txt`.
-- **Test Markers:** CI runs fast unit tests (`pytest -m "not gui"`). Browser GUI tests use `@pytest.mark.gui` / `npx playwright test`.
+- **Test Markers:** Fast unit & integration tests run via `pytest`. E2E browser tests run via `npx playwright test`.
 
 ## 4. Mandatory Constraints & Environment
 - **Terminal:** Operating in Windows — use **PowerShell** syntax exclusively for terminal commands.
@@ -33,5 +34,5 @@ Maintain strict Separation of Concerns (SoC):
 ## 5. Execution Workflow
 1. **Inspect:** Read relevant source files and schemas before making edits.
 2. **Implement:** Write modular code following Separation of Concerns.
-3. **Verify:** Run `ruff check src`, `mypy src`, and `pytest -v -m "not gui"`.
+3. **Verify:** Run `ruff check src`, `mypy src`, and `pytest -v`.
 4. **Document:** Keep `README.md` and documentation up to date when adding features or changing configs.

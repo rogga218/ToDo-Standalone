@@ -1,31 +1,30 @@
 import { test, expect } from '@playwright/test';
+import { SidebarPage } from './pages/sidebar-page';
 
-test.describe('ToDo App E2E Tests', () => {
-  test('homepage loads correctly', async ({ page }) => {
-    // Navigate to the base URL (which is http://localhost:8080 configured in playwright.config.ts)
-    await page.goto('/');
+test.describe('ToDo App Base Initialization', () => {
+  test('homepage loads and shows navigation elements', async ({ page }) => {
+    const sidebar = new SidebarPage(page);
+    await sidebar.gotoDashboard();
 
-    // Verify the page title
+    // Verify page title
     await expect(page).toHaveTitle(/ToDo-App/);
 
-    // Wait for the main UI to render by looking for static text (using Swedish default)
-    await expect(page.locator('body')).toContainText('Ny Uppgift');
-    await expect(page.locator('body')).toContainText('Översikt');
-
-    // Verify the theme toggle button exists (assumes it's the first standard button in the header)
-    const toggleButton = page.locator('button.q-btn').first();
-    await expect(toggleButton).toBeVisible();
+    // Verify key sidebar elements
+    await expect(sidebar.dashboardBtn).toBeVisible();
+    await expect(sidebar.historyBtn).toBeVisible();
+    await expect(sidebar.newTaskBtn).toBeVisible();
+    await expect(sidebar.managePersonsBtn).toBeVisible();
   });
 
   test('can open new todo dialog', async ({ page }) => {
-    await page.goto('/');
+    const sidebar = new SidebarPage(page);
+    await sidebar.gotoDashboard();
+    await sidebar.openNewTaskDialog();
 
-    // Look for the "Ny Uppgift" button and click it
-    const newTodoButton = page.getByRole('button', { name: 'Ny Uppgift' });
-    await newTodoButton.click();
-
-    // Verify the dialog appears
-    const dialogTitle = page.getByRole('heading', { name: 'Ny Uppgift' }).or(page.getByText('Ny Uppgift').first());
+    // Verify dialog appears
+    const dialogTitle = page.getByRole('heading', { name: /Ny Uppgift|New Task/i }).or(
+      page.getByText(/Ny Uppgift|New Task/i).first()
+    );
     await expect(dialogTitle).toBeVisible();
   });
 });
