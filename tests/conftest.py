@@ -1,4 +1,7 @@
 import os
+
+# Ensure default test environment secrets are present
+os.environ.setdefault("STORAGE_SECRET", "test_storage_secret_key_12345")
 from datetime import datetime
 from typing import Generator
 

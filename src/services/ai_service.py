@@ -28,17 +28,26 @@ def generate_subtasks(session: Session, todo_id: uuid.UUID) -> Todo:
 
         client = genai.Client(api_key=api_key)
 
-        prompt = f"""
-        Break down the following task into 3-5 concrete subtasks. Match the language of the task title and description.
-        Task / Uppgift: {todo.title}
-        Description / Beskrivning: {todo.description}
-
-        Return ONLY a valid JSON array of strings. Example: ["Subtask 1", "Subtask 2"]
-        """
+        prompt = (
+            "Break down the following user-provided task into 3-5 concrete subtasks.\n\n"
+            f"<task_title>\n{todo.title}\n</task_title>\n"
+            f"<task_description>\n{todo.description}\n</task_description>\n\n"
+            "Return ONLY a valid JSON array of strings matching the task language."
+        )
 
         call_kwargs: dict[str, Any] = {
             "model": settings.GEMINI_MODEL,
             "contents": prompt,
+        }
+
+        # System instruction and configuration
+        config_kwargs: dict[str, Any] = {
+            "system_instruction": (
+                "You are a structured task decomposition assistant. "
+                "Break down the user-provided task into 3-5 concrete, actionable subtasks. "
+                "Match the language of the task title and description. "
+                'Return ONLY a valid JSON array of strings. Example: ["Subtask 1", "Subtask 2"].'
+            )
         }
 
         # Configure thinking effort / budget if set
@@ -50,7 +59,9 @@ def generate_subtasks(session: Session, todo_id: uuid.UUID) -> Todo:
                 thinking_kwargs["thinking_level"] = thinking_level
             if isinstance(thinking_budget, int):
                 thinking_kwargs["thinking_budget"] = thinking_budget
-            call_kwargs["config"] = types.GenerateContentConfig(thinking_config=types.ThinkingConfig(**thinking_kwargs))
+            config_kwargs["thinking_config"] = types.ThinkingConfig(**thinking_kwargs)
+
+        call_kwargs["config"] = types.GenerateContentConfig(**config_kwargs)
 
         response = client.models.generate_content(**call_kwargs)
 
@@ -64,11 +75,16 @@ def generate_subtasks(session: Session, todo_id: uuid.UUID) -> Todo:
             response_text = response_text.replace("```json", "").replace("```", "")
 
         subtasks_titles = json.loads(response_text)
+        if not isinstance(subtasks_titles, list):
+            raise ValueError("AI response must be a JSON array of strings")
 
-        # Filter and create subtasks
-        for title in subtasks_titles:
-            clean_title = title.strip()
+        # Filter, sanitize, and bound subtasks (max 10 subtasks, max 100 chars each)
+        for item in subtasks_titles[:10]:
+            if not isinstance(item, str):
+                continue
+            clean_title = item.strip()
             if clean_title:
+                clean_title = clean_title[:100]
                 subtask = Subtask(title=clean_title, todo_id=todo.id)
                 session.add(subtask)
 

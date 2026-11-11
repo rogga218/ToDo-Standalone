@@ -17,6 +17,7 @@ services:
       - PYTHONDONTWRITEBYTECODE=1
       - DATABASE_URL=${DATABASE_URL:-sqlite:///data/todo.db}
       - TZ=${TZ:-Europe/Stockholm}
+      - HOST=${HOST:-0.0.0.0}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8080/health').getcode() == 200 else 1)"]
       interval: 30s

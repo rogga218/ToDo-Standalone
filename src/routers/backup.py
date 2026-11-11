@@ -36,6 +36,9 @@ def export_backup(
     raise HTTPException(status_code=400, detail="Invalid format specified")
 
 
+MAX_BACKUP_SIZE = 10 * 1024 * 1024  # 10 MB
+
+
 @router.post("/import")
 async def import_backup(
     file: UploadFile,
@@ -45,7 +48,14 @@ async def import_backup(
     if not file.filename:
         raise HTTPException(status_code=400, detail="No file provided")
 
-    raw_bytes = await file.read()
+    # Guard against memory exhaustion: read up to MAX_BACKUP_SIZE + 1 bytes
+    raw_bytes = await file.read(MAX_BACKUP_SIZE + 1)
+    if len(raw_bytes) > MAX_BACKUP_SIZE:
+        raise HTTPException(
+            status_code=413,
+            detail=f"File exceeds maximum allowed size of {MAX_BACKUP_SIZE // (1024 * 1024)} MB",
+        )
+
     filename_lower = file.filename.lower()
 
     try:

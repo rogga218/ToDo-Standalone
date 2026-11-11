@@ -149,12 +149,12 @@ Create a `.env` file in the root directory (use `.env.example` as a template).
 | Variable | Description | Default |
 | :--- | :--- | :--- |
 | `APP_NAME` | Application title display | `ToDo App` |
-| `HOST` | Bind host address | `0.0.0.0` |
+| `HOST` | Bind host address (`0.0.0.0` in Docker) | `127.0.0.1` |
 | `PORT` | Local dev port | `8080` |
 | `DEBUG` | Enable debug mode / hot-reload | `False` |
 | `DATABASE_URL` | Explicit database connection string (overrides `SQLITE_FILE_NAME`) | `None` (`sqlite:///data/todo.db` in Docker) |
 | `SQLITE_FILE_NAME` | SQLite database file name when `DATABASE_URL` is unset | `todo.db` |
-| `STORAGE_SECRET` | Secret for session encryption | `antigravity_secret` |
+| `STORAGE_SECRET` | Mandatory secret for session encryption (app fails if missing) | *(Required)* |
 | `GEMINI_API_KEY` | API Key for AI features | `None` |
 | `GEMINI_MODEL` | Gemini Model Alias | `gemini-3.8-flash` |
 | `GEMINI_THINKING_LEVEL` | AI Thinking effort (`MINIMAL`, `LOW`, `MEDIUM`, `HIGH`) | `LOW` |

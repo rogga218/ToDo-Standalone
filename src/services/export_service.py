@@ -8,6 +8,8 @@ from sqlmodel import Session, select
 from src.models import Person, Subtask, Todo
 from src.services import person_service, todo_service
 
+MAX_IMPORT_RECORDS = 5000
+
 
 class ExportService:
     @staticmethod
@@ -86,6 +88,10 @@ class ExportService:
         """Import Persons, ToDos, and Subtasks from JSON dictionary into session."""
         if not isinstance(data, dict) or "todos" not in data:
             raise ValueError("Invalid JSON backup structure: missing 'todos'")
+
+        todos_payload = data.get("todos", [])
+        if len(todos_payload) > MAX_IMPORT_RECORDS:
+            raise ValueError(f"Backup exceeds maximum allowed records ({MAX_IMPORT_RECORDS})")
 
         existing_persons = person_service.get_persons(session)
         person_name_map = {p.name.lower(): p for p in existing_persons}
@@ -176,6 +182,9 @@ class ExportService:
         """Import ToDos from CSV text string into session."""
         f = io.StringIO(csv_content.strip())
         reader = csv.DictReader(f)
+        rows = list(reader)
+        if len(rows) > MAX_IMPORT_RECORDS:
+            raise ValueError(f"Backup exceeds maximum allowed records ({MAX_IMPORT_RECORDS})")
 
         existing_persons = person_service.get_persons(session)
         person_name_map = {p.name.lower(): p for p in existing_persons}
@@ -185,7 +194,7 @@ class ExportService:
 
         default_person = next(iter(person_name_map.values()), None)
 
-        for row in reader:
+        for row in rows:
             try:
                 title = (row.get("Title") or row.get("title") or "").strip()
                 if not title:

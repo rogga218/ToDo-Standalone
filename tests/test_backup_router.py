@@ -49,3 +49,30 @@ def test_backup_router_export_and_import(client: TestClient, session: Session):
     )
     assert resp_import_csv.status_code == 200
     assert resp_import_csv.json()["success"] is True
+
+
+def test_backup_router_import_file_too_large(client: TestClient):
+    """Ensure uploads exceeding 10MB are rejected with HTTP 413."""
+    from src.routers.backup import MAX_BACKUP_SIZE
+
+    oversized_bytes = b" " * (MAX_BACKUP_SIZE + 50)
+    resp = client.post(
+        "/api/backup/import",
+        files={"file": ("large_backup.json", oversized_bytes, "application/json")},
+    )
+    assert resp.status_code == 413
+    assert "File exceeds maximum allowed size" in resp.json()["detail"]
+
+
+def test_backup_router_import_too_many_records(client: TestClient):
+    """Ensure import fails when record count exceeds safety ceiling."""
+    too_many_todos = [{"title": f"Task {i}"} for i in range(5001)]
+    payload = {"todos": too_many_todos}
+    payload_bytes = json.dumps(payload).encode("utf-8")
+
+    resp = client.post(
+        "/api/backup/import",
+        files={"file": ("overflow.json", payload_bytes, "application/json")},
+    )
+    assert resp.status_code == 400
+    assert "exceeds maximum allowed records" in resp.json()["detail"]

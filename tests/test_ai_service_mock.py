@@ -44,6 +44,34 @@ def test_generate_subtasks_success(session: Session):
             assert titles == sorted(expected_subtasks)
 
 
+def test_generate_subtasks_sanitization(session: Session):
+    p = person_service.create_person(session, PersonCreate(name="Sanitize User"))
+    todo = todo_service.create_todo(session, TodoCreate(title="Task", description="Desc", person_id=p.id))
+
+    long_title = "A" * 150
+    # 12 items + non-string item
+    items = [f"Subtask {i}" for i in range(11)] + [long_title, 12345]
+
+    with patch("src.services.ai_service.get_settings") as mock_settings:
+        mock_settings.return_value.GEMINI_API_KEY = "TEST_KEY"
+        mock_settings.return_value.GEMINI_MODEL = "gemini-3.8-flash"
+        mock_settings.return_value.GEMINI_THINKING_LEVEL = None
+        mock_settings.return_value.GEMINI_THINKING_BUDGET = None
+
+        with patch("google.genai.Client") as mock_client_cls:
+            mock_client_instance = MagicMock()
+            mock_client_cls.return_value = mock_client_instance
+            import json
+
+            mock_client_instance.models.generate_content.return_value = MockGeminiResponse(text=json.dumps(items))
+
+            updated = ai_service.generate_subtasks(session, todo.id)
+            # Max 10 items accepted
+            assert len(updated.subtasks) == 10
+            for st in updated.subtasks:
+                assert len(st.title) <= 100
+
+
 def test_generate_subtasks_no_api_key(session: Session):
     # Setup data
     p = person_service.create_person(session, PersonCreate(name="NoKey User"))
@@ -189,4 +217,6 @@ def test_generate_subtasks_no_thinking_config(session: Session):
             assert len(updated.subtasks) == 1
 
             _, kwargs = mock_client_instance.models.generate_content.call_args
-            assert "config" not in kwargs
+            assert "config" in kwargs
+            assert kwargs["config"].system_instruction is not None
+            assert getattr(kwargs["config"], "thinking_config", None) is None

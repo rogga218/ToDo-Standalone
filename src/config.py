@@ -38,9 +38,16 @@ class Settings(BaseSettings):
         return int(v)
 
     # Security & Network
-    STORAGE_SECRET: str = "antigravity_secret"
-    HOST: str = "0.0.0.0"
+    STORAGE_SECRET: str
+    HOST: str = "127.0.0.1"
     PORT: int = 8080
+
+    @field_validator("STORAGE_SECRET", mode="before")
+    @classmethod
+    def validate_storage_secret(cls, v: Any) -> str:
+        if v is None or not str(v).strip():
+            raise ValueError("STORAGE_SECRET must be set in .env to a secure non-empty string.")
+        return str(v).strip()
 
     # Pydantic Settings Config
     model_config = SettingsConfigDict(env_file=(".env", "../.env"), env_file_encoding="utf-8", extra="ignore")

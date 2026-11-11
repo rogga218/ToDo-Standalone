@@ -49,6 +49,26 @@ def test_config_frozen_env_fallback():
         mock_join.assert_called()
 
 
+def test_config_storage_secret_validation():
+    import pytest
+    from pydantic import ValidationError
+
+    # Valid secret with no env file
+    s = Settings(_env_file=None, STORAGE_SECRET="my_super_secret_key")
+    assert s.STORAGE_SECRET == "my_super_secret_key"
+    assert s.HOST == "127.0.0.1"
+
+    # Missing secret in environment and env file raises ValidationError
+    with patch.dict(os.environ, {}, clear=True):
+        with pytest.raises(ValidationError):
+            Settings(_env_file=None)
+
+    # Empty or whitespace secret raises ValidationError
+    for invalid in ["", "   "]:
+        with pytest.raises(ValidationError):
+            Settings(_env_file=None, STORAGE_SECRET=invalid)
+
+
 # -----------------
 # 2. Database Tests
 # -----------------
