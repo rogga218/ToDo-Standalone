@@ -75,18 +75,20 @@ graph TD
 | **Run via Podman/Docker** | `podman-compose up --build -d` |
 | **Unit & Integration Tests** | `pytest` |
 | **E2E Playwright Browser Tests** | `npx playwright test` |
-| **Lint & Type Check** | `ruff check src` && `mypy src` |
+| **Lint & Type Check** | `ruff check src`; `mypy src` |
 | **Seed Test Data** | `python -m src.seed_data` |
-| **Build Desktop .exe** | `pip install -r requirements-build.txt` && `python build.py` |
+| **Build Desktop .exe** | `pip install -r requirements-build.txt`; `python build.py` |
 
 ## Project Structure & Directory Guidance
 
 ```
+├── .agents/skills/           # Agent skills (dependency-checker, github-workflow, playwright-testing)
 ├── .env.example              # Configuration environment template
 ├── Dockerfile & docker-compose.yml # Container orchestration
 ├── requirements.txt          # App & development dependencies
 ├── requirements-build.txt    # Standalone desktop EXE build dependencies
 ├── build.py                  # PyInstaller executable build script
+├── scripts/                  # Utility scripts (generate_secret.py)
 │
 ├── src/                      # Application Source Code
 │   ├── main.py               # Main entry point (starts FastAPI + NiceGUI)
@@ -94,8 +96,8 @@ graph TD
 │   ├── database.py           # SQLite connection & session management
 │   ├── config.py             # Environment configuration (pydantic-settings)
 │   ├── core/                 # Error handling & process lifecycle management
-│   ├── services/             # Business logic (todo_service, person_service, ai_service)
-│   ├── routers/              # FastAPI REST endpoints (/todos, /persons, /ai)
+│   ├── services/             # Business logic (todo, person, ai, export_service)
+│   ├── routers/              # FastAPI REST endpoints (/todos, /persons, /ai, /backup)
 │   └── ui/                   # NiceGUI Frontend Layer
 │       ├── controller.py     # UI Controller & state management
 │       ├── theme.py          # Persistent dark/light theme engine
@@ -146,11 +148,16 @@ Create a `.env` file in the root directory (use `.env.example` as a template).
 
 | Variable | Description | Default |
 | :--- | :--- | :--- |
-| `DATABASE_URL` | Database connection string | `sqlite:///data/todo.db` |
-| `GEMINI_API_KEY` | API Key for AI features | `None` |
-| `GEMINI_MODEL` | Gemini Model Alias | `gemini-flash-latest` |
-| `STORAGE_SECRET` | Secret for session encryption | `random_secret_for_session_encryption` |
+| `APP_NAME` | Application title display | `ToDo App` |
 | `PORT` | Local dev port | `8080` |
+| `DEBUG` | Enable debug mode / hot-reload | `False` |
+| `DATABASE_URL` | Explicit database connection string (overrides `SQLITE_FILE_NAME`) | `None` (`sqlite:///data/todo.db` in Docker) |
+| `SQLITE_FILE_NAME` | SQLite database file name when `DATABASE_URL` is unset | `todo.db` |
+| `STORAGE_SECRET` | Secret for session encryption | `antigravity_secret` |
+| `GEMINI_API_KEY` | API Key for AI features | `None` |
+| `GEMINI_MODEL` | Gemini Model Alias | `gemini-3.8-flash` |
+| `GEMINI_THINKING_LEVEL` | AI Thinking effort (`MINIMAL`, `LOW`, `MEDIUM`, `HIGH`) | `LOW` |
+| `GEMINI_THINKING_BUDGET` | AI Thinking token budget (`0` = disabled, `-1` = auto, or int) | `None` |
 
 
 > **Tip:** To generate a secure `STORAGE_SECRET`, run `python scripts/generate_secret.py` and copy the output.

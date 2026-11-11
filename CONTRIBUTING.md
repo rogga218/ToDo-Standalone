@@ -32,6 +32,10 @@ To set up your local development environment, please follow these steps:
 4. **Set up environment variables**
    Copy the example environment file and fill in your details (like the `GEMINI_API_KEY` if you plan to work on the AI features).
    ```bash
+   # Windows (PowerShell)
+   Copy-Item .env.example .env
+
+   # Linux / macOS
    cp .env.example .env
    ```
 
@@ -46,7 +50,7 @@ To set up your local development environment, please follow these steps:
    ruff format src
    ruff check src
    mypy src
-   pytest -m "not gui"
+   pytest
    npx playwright test
    pip-audit -r requirements.txt
    npm audit

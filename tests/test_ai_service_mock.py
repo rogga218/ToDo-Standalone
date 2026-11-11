@@ -141,3 +141,50 @@ def test_generate_subtasks_todo_not_found(session: Session):
         with pytest.raises(HTTPException) as excinfo:
             ai_service.generate_subtasks(session, uuid.uuid4())
         assert excinfo.value.status_code == 404
+
+
+def test_generate_subtasks_with_thinking_config(session: Session):
+    p = person_service.create_person(session, PersonCreate(name="Thinking User"))
+    todo = todo_service.create_todo(session, TodoCreate(title="Deep Task", description="Desc", person_id=p.id))
+
+    with patch("src.services.ai_service.get_settings") as mock_settings:
+        mock_settings.return_value.GEMINI_API_KEY = "TEST_KEY"
+        mock_settings.return_value.GEMINI_MODEL = "gemini-3.8-flash"
+        mock_settings.return_value.GEMINI_THINKING_LEVEL = "LOW"
+        mock_settings.return_value.GEMINI_THINKING_BUDGET = 1024
+
+        with patch("google.genai.Client") as mock_client_cls:
+            mock_client_instance = MagicMock()
+            mock_client_cls.return_value = mock_client_instance
+            mock_client_instance.models.generate_content.return_value = MockGeminiResponse(text='["Step 1", "Step 2"]')
+
+            updated = ai_service.generate_subtasks(session, todo.id)
+            assert len(updated.subtasks) == 2
+
+            # Verify call args
+            _, kwargs = mock_client_instance.models.generate_content.call_args
+            assert "config" in kwargs
+            assert kwargs["config"].thinking_config.thinking_level == "LOW"
+            assert kwargs["config"].thinking_config.thinking_budget == 1024
+
+
+def test_generate_subtasks_no_thinking_config(session: Session):
+    p = person_service.create_person(session, PersonCreate(name="NoThink User"))
+    todo = todo_service.create_todo(session, TodoCreate(title="Simple Task", description="Desc", person_id=p.id))
+
+    with patch("src.services.ai_service.get_settings") as mock_settings:
+        mock_settings.return_value.GEMINI_API_KEY = "TEST_KEY"
+        mock_settings.return_value.GEMINI_MODEL = "gemini-3.8-flash"
+        mock_settings.return_value.GEMINI_THINKING_LEVEL = None
+        mock_settings.return_value.GEMINI_THINKING_BUDGET = None
+
+        with patch("google.genai.Client") as mock_client_cls:
+            mock_client_instance = MagicMock()
+            mock_client_cls.return_value = mock_client_instance
+            mock_client_instance.models.generate_content.return_value = MockGeminiResponse(text='["Step 1"]')
+
+            updated = ai_service.generate_subtasks(session, todo.id)
+            assert len(updated.subtasks) == 1
+
+            _, kwargs = mock_client_instance.models.generate_content.call_args
+            assert "config" not in kwargs

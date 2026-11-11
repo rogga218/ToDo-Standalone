@@ -1,8 +1,9 @@
 import logging
 import sys
 from functools import lru_cache
-from typing import Optional
+from typing import Any, Optional
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 # Create a logger for the application
@@ -25,7 +26,16 @@ class Settings(BaseSettings):
 
     # AI Config
     GEMINI_API_KEY: Optional[str] = None
-    GEMINI_MODEL: str = "gemini-flash-latest"
+    GEMINI_MODEL: str = "gemini-3.8-flash"
+    GEMINI_THINKING_LEVEL: Optional[str] = "LOW"
+    GEMINI_THINKING_BUDGET: Optional[int] = None
+
+    @field_validator("GEMINI_THINKING_BUDGET", mode="before")
+    @classmethod
+    def parse_thinking_budget(cls, v: Any) -> Optional[int]:
+        if v is None or v == "":
+            return None
+        return int(v)
 
     # Security & Network
     STORAGE_SECRET: str = "antigravity_secret"

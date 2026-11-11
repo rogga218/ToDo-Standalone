@@ -21,20 +21,38 @@ def generate_subtasks(session: Session, todo_id: uuid.UUID) -> Todo:
 
     # Call Gemini
     try:
+        from typing import Any
+
         from google import genai
+        from google.genai import types
 
         client = genai.Client(api_key=api_key)
 
-        response = client.models.generate_content(
-            model=settings.GEMINI_MODEL,
-            contents=f"""
+        prompt = f"""
         Bryt ner följande uppgift i 3-5 konkreta deluppgifter på Svenska.
         Uppgift: {todo.title}
         Beskrivning: {todo.description}
 
         Returnera ENDAST en giltig JSON-array av strängar. Exempel: ["Köpa färg", "Måla vägg"]
-        """,
-        )
+        """
+
+        call_kwargs: dict[str, Any] = {
+            "model": settings.GEMINI_MODEL,
+            "contents": prompt,
+        }
+
+        # Configure thinking effort / budget if set
+        thinking_level = settings.GEMINI_THINKING_LEVEL
+        thinking_budget = settings.GEMINI_THINKING_BUDGET
+        if isinstance(thinking_level, str) or isinstance(thinking_budget, int):
+            thinking_kwargs: dict[str, Any] = {}
+            if isinstance(thinking_level, str):
+                thinking_kwargs["thinking_level"] = thinking_level
+            if isinstance(thinking_budget, int):
+                thinking_kwargs["thinking_budget"] = thinking_budget
+            call_kwargs["config"] = types.GenerateContentConfig(thinking_config=types.ThinkingConfig(**thinking_kwargs))
+
+        response = client.models.generate_content(**call_kwargs)
 
         # SDK 2.0 response parsing might differ
         response_text = response.text

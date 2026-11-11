@@ -11,8 +11,8 @@ Always run these commands before concluding code tasks:
 ## 2. Architecture & Path Map
 Maintain strict Separation of Concerns (SoC):
 - **UI Components & Pages:** `src/ui/` (NiceGUI pages, dialogs, theme, i18n in `translations.py`)
-- **Business Logic Services:** `src/services/` (`todo_service.py`, `person_service.py`, `ai_service.py`)
-- **FastAPI Endpoints:** `src/routers/` (`todos.py`, `persons.py`, `ai.py`)
+- **Business Logic Services:** `src/services/` (`todo_service.py`, `person_service.py`, `ai_service.py`, `export_service.py`)
+- **FastAPI Endpoints:** `src/routers/` (`todos.py`, `persons.py`, `ai.py`, `backup.py`)
 - **Data Models:** `src/models.py` (SQLModel / Pydantic V2)
 - **Database & Config:** `src/database.py` (SQLite & sessions), `src/config.py` (loads `.env`)
 
@@ -26,7 +26,7 @@ Maintain strict Separation of Concerns (SoC):
 ## 4. Mandatory Constraints & Environment
 - **Terminal:** Operating in Windows — use **PowerShell** syntax exclusively for terminal commands.
 - **Containers:** Prefer `podman-compose` (or `docker-compose`) for container commands (e.g. `podman-compose up --build -d`).
-- **Environment & Config:** Runtime variables (`DATABASE_URL`, `GEMINI_API_KEY`, `STORAGE_SECRET`, `PORT`) are driven by `.env` (templated in `.env.example`).
+- **Environment & Config:** Runtime variables (`DATABASE_URL`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `GEMINI_THINKING_LEVEL`, `GEMINI_THINKING_BUDGET`, `STORAGE_SECRET`, `PORT`) are driven by `.env` (templated in `.env.example`).
 - **Zero Warnings:** Fix all LSP errors, lint warnings, and type errors before concluding tasks.
 - **Language Policy:** Write all code, docstrings, and comments in **English**.
 - **Test Coverage:** Maintain >65% test coverage requirement (`pytest-cov`).

@@ -19,6 +19,6 @@
 - [ ] My code follows the code style and architecture guidelines of this project.
 - [ ] Code passes linting (`ruff check src`) with 0 warnings.
 - [ ] Code passes type checking (`mypy src`) with 0 errors.
-- [ ] All unit and integration tests pass (`pytest -m "not gui"`).
+- [ ] All unit and integration tests pass (`pytest`).
 - [ ] Minimum test coverage of 65% is maintained (`pytest-cov`).
 - [ ] I have updated the documentation accordingly.

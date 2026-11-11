@@ -1,17 +1,19 @@
-nicegui>=3.15.0
-fastapi>=0.141.1
-sqlmodel>=0.0.39
-uvicorn>=0.52.1
-google-genai>=1.65.0
-pydantic-settings>=2.14.2
-pytest>=9.1.1
-pytest-asyncio>=1.4.0
+nicegui>=4.0.0
+fastapi>=0.162.4
+sqlmodel>=0.0.49
+uvicorn>=0.54.0
+google-genai>=3.2.0
+pydantic-settings>=2.16.2
+pytest>=9.2.0
+pytest-asyncio>=1.4.1
 pytest-cov>=7.1.0
-pytest-playwright>=0.5.1
+pytest-playwright>=0.10.0
 httpx>=0.28.1
-httpx2>=2.9.1
+httpx2>=2.16.0
 
 # Development & Linting
 ruff>=0.16.1
-mypy>=2.3.0
+mypy>=2.4.1
+pip-audit>=2.7.3
+
 

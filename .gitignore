@@ -72,9 +72,6 @@ Desktop.ini
 data/
 temp/
 
-# Custom Agent Config
-.agents/
-
 # Node & Playwright
 node_modules/
 playwright-report/
