@@ -149,6 +149,7 @@ Create a `.env` file in the root directory (use `.env.example` as a template).
 | Variable | Description | Default |
 | :--- | :--- | :--- |
 | `APP_NAME` | Application title display | `ToDo App` |
+| `HOST` | Bind host address | `0.0.0.0` |
 | `PORT` | Local dev port | `8080` |
 | `DEBUG` | Enable debug mode / hot-reload | `False` |
 | `DATABASE_URL` | Explicit database connection string (overrides `SQLITE_FILE_NAME`) | `None` (`sqlite:///data/todo.db` in Docker) |
@@ -280,11 +281,6 @@ docker-compose run --rm app python -m src.seed_data
 ```bash
 python -m src.seed_data
 ```
-
-## Quick Links
-
--   **App**: [http://localhost:8080](http://localhost:8080)
--   **API JSON**: [http://localhost:8080/openapi.json](http://localhost:8080/openapi.json)
 
 ## License
 

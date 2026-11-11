@@ -7,7 +7,7 @@ from src.seed_data import create_seed_data
 
 def test_create_seed_data_no_persons():
     # Patch the global engine so seed_data connects to our mocked environment
-    with patch("src.seed_data.create_db_and_tables"):
+    with patch("src.seed_data.create_db_and_tables"), patch("src.seed_data.create_default_persons"):
         with patch("src.seed_data.Session") as mock_session_cls:
             mock_session = MagicMock(spec=Session)
             mock_session_cls.return_value.__enter__.return_value = mock_session
@@ -22,7 +22,7 @@ def test_create_seed_data_no_persons():
 
 
 def test_create_seed_data_success():
-    with patch("src.seed_data.create_db_and_tables"):
+    with patch("src.seed_data.create_db_and_tables"), patch("src.seed_data.create_default_persons"):
         with patch("src.seed_data.Session") as mock_session_cls:
             mock_session = MagicMock(spec=Session)
             mock_session_cls.return_value.__enter__.return_value = mock_session

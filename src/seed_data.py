@@ -3,7 +3,7 @@ from datetime import date, timedelta
 
 from sqlmodel import Session, select
 
-from src.database import create_db_and_tables, engine
+from src.database import create_db_and_tables, create_default_persons, engine
 from src.models import Person, Todo
 
 # Realistic Data Source
@@ -137,8 +137,9 @@ DESCRIPTIONS = [
 
 
 def create_seed_data():
-    # Ensure tables exist
+    # Ensure tables and default persons exist
     create_db_and_tables()
+    create_default_persons()
 
     with Session(engine) as session:
         # 1. Get existing persons

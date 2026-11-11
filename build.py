@@ -20,7 +20,7 @@ def build_executable():
             "pip",
             "install",
             "--upgrade",
-            "setuptools<81.0.0",
+            "setuptools",
             "wheel",
         ]
     )
@@ -154,8 +154,6 @@ def build_executable():
         # Hidden imports
         "--hidden-import",
         "uvicorn",
-        "--hidden-import",
-        "passlib.handlers.bcrypt",
         "--hidden-import",
         "pydantic_settings",
         "--hidden-import",

@@ -73,7 +73,7 @@ try:
 
     # Run Configuration
     args = {
-        "host": "0.0.0.0",  # Bind to all interfaces for Docker compatibility
+        "host": settings.HOST,  # Configurable bind host (defaults to 0.0.0.0 for Docker compatibility)
         "port": settings.PORT,
         "title": settings.APP_NAME,
         "favicon": os.path.join(settings.get_assets_path(), "logo.ico"),

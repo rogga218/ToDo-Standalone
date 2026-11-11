@@ -4,7 +4,7 @@ services:
     image: todov2_standalone
     restart: always
     ports:
-      - "8080:8080"
+      - "${PORT:-8080}:8080"
     env_file:
       - .env
     volumes:
@@ -15,8 +15,8 @@ services:
     environment:
       - PYTHONUNBUFFERED=1
       - PYTHONDONTWRITEBYTECODE=1
-      - DATABASE_URL=sqlite:///data/todo.db
-      - TZ=Europe/Stockholm
+      - DATABASE_URL=${DATABASE_URL:-sqlite:///data/todo.db}
+      - TZ=${TZ:-Europe/Stockholm}
     healthcheck:
       test: ["CMD", "python", "-c", "import urllib.request, sys; sys.exit(0 if urllib.request.urlopen('http://localhost:8080/health').getcode() == 200 else 1)"]
       interval: 30s

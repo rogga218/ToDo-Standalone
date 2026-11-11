@@ -10,7 +10,7 @@ a = Analysis(
         (os.path.join(SPECPATH, 'src'), 'src'),
         (os.path.join(SPECPATH, 'src', 'assets'), 'src/assets'),
     ],
-    hiddenimports=['uvicorn', 'passlib.handlers.bcrypt', 'pydantic_settings', 'python_multipart', '_cffi_backend', 'cffi', 'PySide6.QtWebEngineWidgets'],
+    hiddenimports=['uvicorn', 'pydantic_settings', 'python_multipart', '_cffi_backend', 'cffi', 'PySide6.QtWebEngineWidgets'],
     hookspath=[],
     hooksconfig={},
     runtime_hooks=[],

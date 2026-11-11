@@ -39,6 +39,7 @@ class Settings(BaseSettings):
 
     # Security & Network
     STORAGE_SECRET: str = "antigravity_secret"
+    HOST: str = "0.0.0.0"
     PORT: int = 8080
 
     # Pydantic Settings Config

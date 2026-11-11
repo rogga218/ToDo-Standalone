@@ -49,12 +49,14 @@ def test_generate_subtasks_no_api_key(session: Session):
     p = person_service.create_person(session, PersonCreate(name="NoKey User"))
     todo = todo_service.create_todo(session, TodoCreate(title="Task", description="Desc", person_id=p.id))
 
-    with patch("src.services.ai_service.get_settings") as mock_settings:
-        mock_settings.return_value.GEMINI_API_KEY = None
+    for invalid_key in [None, "", "XXXX", "your_key_here"]:
+        with patch("src.services.ai_service.get_settings") as mock_settings:
+            mock_settings.return_value.GEMINI_API_KEY = invalid_key
 
-        with pytest.raises(HTTPException) as excinfo:
-            ai_service.generate_subtasks(session, todo.id)
-        assert excinfo.value.status_code == 500
+            with pytest.raises(HTTPException) as excinfo:
+                ai_service.generate_subtasks(session, todo.id)
+            assert excinfo.value.status_code == 500
+            assert "GEMINI_API_KEY not configured" in excinfo.value.detail
 
 
 def test_generate_subtasks_empty_response(session: Session):

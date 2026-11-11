@@ -12,7 +12,7 @@ from src.models import Subtask, Todo
 def generate_subtasks(session: Session, todo_id: uuid.UUID) -> Todo:
     settings = get_settings()
     api_key = settings.GEMINI_API_KEY
-    if not api_key or api_key == "XXXX":
+    if not api_key or api_key in ("XXXX", "your_key_here"):
         raise HTTPException(status_code=500, detail="GEMINI_API_KEY not configured")
 
     todo = session.get(Todo, todo_id)
@@ -29,11 +29,11 @@ def generate_subtasks(session: Session, todo_id: uuid.UUID) -> Todo:
         client = genai.Client(api_key=api_key)
 
         prompt = f"""
-        Bryt ner följande uppgift i 3-5 konkreta deluppgifter på Svenska.
-        Uppgift: {todo.title}
-        Beskrivning: {todo.description}
+        Break down the following task into 3-5 concrete subtasks. Match the language of the task title and description.
+        Task / Uppgift: {todo.title}
+        Description / Beskrivning: {todo.description}
 
-        Returnera ENDAST en giltig JSON-array av strängar. Exempel: ["Köpa färg", "Måla vägg"]
+        Return ONLY a valid JSON array of strings. Example: ["Subtask 1", "Subtask 2"]
         """
 
         call_kwargs: dict[str, Any] = {
