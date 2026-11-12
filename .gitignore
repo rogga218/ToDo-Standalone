@@ -24,7 +24,6 @@ MANIFEST
 
 # PyInstaller
 *.spec
-!TodoApp.spec
 
 # Unit Test & Coverage Reports
 htmlcov/
